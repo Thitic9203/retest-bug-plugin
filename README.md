@@ -6,7 +6,7 @@ A Claude Code plugin that turns Jira bug retesting into a **single command**. Ha
 
 | Without plugin | With plugin |
 |----------------|-------------|
-| Open ticket → login portal → test manually → collect evidence → write comment → paste into Jira → move status → assign dev | Type `/retest-bug CP-12345` and approve the comment |
+| Open ticket → login portal → test manually → collect evidence → write comment → paste into Jira → move status → assign dev | Type `/retest-bug PROJ-123` and approve the comment |
 | **30–60 min** per ticket | **5–10 min** per ticket |
 | Inconsistent format, forgotten transitions, missed assignments | Consistent output, every step completed, every time |
 
@@ -26,11 +26,11 @@ A Claude Code plugin that turns Jira bug retesting into a **single command**. Ha
 ## Usage
 
 ```
-/retest-bug CP-12345
-/retest-bug https://humanintelligence.atlassian.net/browse/CP-12345
+/retest-bug PROJ-123
+/retest-bug https://your-org.atlassian.net/browse/PROJ-123
 ```
 
 ## Prerequisites
 
-- **VPN:** Connect to `ovpn.mycreditport.com` via OpenVPN before starting
-- **Jira:** Log in to `humanintelligence.atlassian.net` in Chrome (once per session)
+- **VPN:** Connect to your project's VPN if the test environment requires it
+- **Jira:** Log in to your Atlassian workspace in Chrome (once per session)
