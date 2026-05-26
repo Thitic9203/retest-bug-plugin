@@ -1,6 +1,21 @@
 # retest-bug
 
-Claude Code plugin รีเทสบัคจาก Jira ticket แบบครบ flow — ทดสอบ, เม้น, transition, assign กลับ dev อัตโนมัติ
+Claude Code plugin ที่ทำให้การรีเทสบัคจาก Jira เสร็จใน **1 คำสั่ง** — แค่ให้ ticket มา ที่เหลือทำให้หมด
+
+## ทำไมต้องใช้
+
+| เดิม (manual) | ใช้ plugin |
+|---------------|-----------|
+| เปิด ticket อ่าน → login portal → ทดสอบเอง → จด evidence → เขียน comment → copy ลง Jira → move status → assign dev | พิมพ์ `/retest-bug CP-12345` แล้วรอ approve comment ที่เดียว |
+| ใช้เวลา **30-60 นาที** ต่อ ticket | ใช้เวลา **5-10 นาที** ต่อ ticket |
+| ลืม transition / ลืม assign / format ไม่ consistent | ทำให้ครบทุกขั้นตอน ทุกครั้ง format เดียวกันหมด |
+
+## สิ่งที่ได้
+
+- **ทดสอบให้อัตโนมัติ** — login portal, เรียก API, เทียบ Swagger spec, จับ screenshot (Bug FE)
+- **Comment สำเร็จรูป** — evidence ครบ, format ตาม guide, รอแค่กด approve
+- **ปิดงานให้จบ** — transition (PASSED → Ready to Demo / FAILED → In Progress) + assign กลับ dev อัตโนมัติ
+- **ไม่ต้องจำขั้นตอน** — อ่าน retest guide + เลือก test strategy + เก็บหลักฐาน ทำให้หมด
 
 ## Install
 
@@ -15,26 +30,7 @@ Claude Code plugin รีเทสบัคจาก Jira ticket แบบคร
 /retest-bug https://humanintelligence.atlassian.net/browse/CP-12345
 ```
 
-## Flow
-
-| Step | Action |
-|------|--------|
-| 0 | ตรวจ VPN + เช็ค Jira connection |
-| 1-2 | ดึง ticket + อ่าน retest guide |
-| 3 | จำแนก Bug Type (API/FE) → กำหนด comment format |
-| 4 | Login portal + ทดสอบ + เทียบ Swagger |
-| 5-6 | เก็บหลักฐาน + draft comment → **รอ user approve** |
-| 7 | Post comment (พร้อม screenshot inline ถ้าเป็น Bug FE) |
-| 8 | Transition + assign กลับ dev อัตโนมัติ |
-
-## ผลเทส → Transition
-
-| ผลเทส | Transition | Assignee |
-|-------|-----------|---------|
-| PASSED ✅ | Ready to Demo | dev คนที่ In Progress ล่าสุด |
-| FAILED ❌ | In Progress | dev คนที่ In Progress ล่าสุด |
-
 ## Prerequisites
 
-- **VPN:** OpenVPN Connect → `ovpn.mycreditport.com`
-- **Jira:** ต้อง login `humanintelligence.atlassian.net` ใน Chrome (ขอครั้งเดียวต่อ session)
+- **VPN:** OpenVPN Connect → `ovpn.mycreditport.com` (ต้อง connect ก่อน)
+- **Jira:** login `humanintelligence.atlassian.net` ใน Chrome (ขอครั้งเดียวต่อ session)
