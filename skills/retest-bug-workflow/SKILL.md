@@ -239,6 +239,22 @@ fetch('/rest/api/3/issue/<TICKET>/attachments', {
 
 หลัง user อนุมัติแล้ว:
 
+### เลือก API version ก่อนโพสต์ (ตัดสินใจตั้งแต่ต้น ห้ามเปลี่ยนกลางทาง)
+
+| เงื่อนไข | API | เหตุผล |
+|----------|-----|--------|
+| Bug FE / มี screenshot ที่ต้อง embed inline | **v2** wiki markup | v3 ADF ไม่มี `mediaApiFileId` → embed ภาพ inline ไม่ได้ |
+| Bug API / ไม่มี screenshot | **v3** ADF | format สมบูรณ์กว่า, MCP รองรับ |
+
+> **กฎ:** ตัดสินใจ v2 หรือ v3 ตั้งแต่ Step 6 (draft) แล้วใช้ตลอด — ห้ามเริ่ม v3 แล้วเปลี่ยนมา v2 ทีหลัง เพราะ format ต่างกันหมด
+
+### Pre-post checklist (ตรวจก่อนโพสต์ทุกครั้ง)
+
+- [ ] emoji ❌ ✅ เป็นตัวจริงใน template literal (ไม่ใช่ `\\u274c`)
+- [ ] ไม่มี ticket key (เช่น `CP-12345`) ใน free text ที่จะโดน auto-link
+- [ ] JS file เป็น ASCII ล้วน (`/[^\x00-\x7F]/.test(js)` = false)
+- [ ] endpoint ตรงกับ format (v2 = wiki markup, v3 = ADF)
+
 ### 7a. ลอง Atlassian MCP ก่อน
 ```
 Tool: mcp__208b743d-c680-4a36-b054-1030bcf5548d__addCommentToJiraIssue
