@@ -275,25 +275,30 @@ fields: { assignee: { accountId: "<dev accountId>" } }
 
 ### ⚠️ JXA + ภาษาไทย — encoding พัง (สำคัญมาก)
 
-**ปัญหา:** JXA (`app.read(file)`) อ่านไฟล์เป็น Latin-1/MacRoman ทำให้ภาษาไทย (UTF-8 multi-byte) แสดงเป็นอักขระแปลก เช่น `±πÅ±πÄ`
+**ปัญหา:** JXA (`app.read(file)`) อ่านไฟล์เป็น Latin-1/MacRoman ทำให้ภาษาไทยแสดงเป็นอักขระแปลก (`±πÅ`) หรือ literal `ส` text
 
-**กฎเหล็ก:** ทุกครั้งที่สร้างไฟล์ JS เพื่อให้ JXA อ่านแล้วรันใน Chrome — ต้อง escape ตัวอักษรที่ไม่ใช่ ASCII ทั้งหมดเป็น `\uXXXX` เสมอ
+**กฎเหล็ก:** ต้อง escape non-ASCII **หลัง** `JSON.stringify` เท่านั้น — ห้าม escape ก่อน `JSON.stringify` เพราะ `\` จะโดน escape ซ้อน กลายเป็น literal `ส` text ใน Jira
 
-**วิธีทำ (Node.js):**
+**วิธีที่ถูกต้อง (Node.js):**
 ```javascript
-function unicodeEscape(str) {
-  return str.split('').map(c =>
-    c.charCodeAt(0) > 127 ? '\\u' + c.charCodeAt(0).toString(16).padStart(4, '0') : c
-  ).join('');
-}
-// ใช้กับทุก string ภาษาไทยใน ADF body ก่อน JSON.stringify
+// 1. build body ด้วยภาษาไทยจริงๆ ก่อน
+const bodyStr = JSON.stringify({ body }); // ยังมี Thai chars อยู่
+
+// 2. escape non-ASCII ทั้งหมด หลัง JSON.stringify เพื่อให้เป็น JS string literal ที่ปลอดภัย
+const safeBodyLiteral = bodyStr
+  .replace(/\\/g, '\\\\')      // escape backslashes ก่อนเสมอ
+  .replace(/'/g, "\\'")         // escape single quotes
+  .replace(/[^\x00-\x7F]/g,    // escape non-ASCII เป็น JS \uXXXX
+    c => '\\u' + c.charCodeAt(0).toString(16).padStart(4, '0'));
+
+// 3. embed เป็น single-quoted string literal ใน JS
+const js = `...body:'${safeBodyLiteral}'...`;
+
+// 4. บันทึกด้วย ascii encoding — ตรวจสอบว่าไม่มี non-ASCII เลย
+fs.writeFileSync('/tmp/jira-fetch.js', js, 'ascii');
 ```
 
-**และบันทึกไฟล์ด้วย ASCII encoding:**
-```javascript
-fs.writeFileSync('/tmp/jira-fetch.js', jsCode, 'ascii');
-// ห้ามใช้ 'utf8' — จะพังเมื่อ JXA อ่าน
-```
+**ทำไมถึงถูก:** Chrome decode `\uXXXX` ใน JS string literal กลับเป็น Thai chars จริงก่อนส่ง fetch → Jira รับ Thai text ถูกต้อง
 
 ---
 
