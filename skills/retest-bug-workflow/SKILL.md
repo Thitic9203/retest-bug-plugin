@@ -273,6 +273,28 @@ fields: { assignee: { accountId: "<dev accountId>" } }
 - Admin token ใช้กับ Gateway ไม่ได้ — Gateway รับเฉพาะ SP token
 - Login ใหม่ถ้า token หมดอายุ (15-30 นาที)
 
+### ⚠️ JXA + ภาษาไทย — encoding พัง (สำคัญมาก)
+
+**ปัญหา:** JXA (`app.read(file)`) อ่านไฟล์เป็น Latin-1/MacRoman ทำให้ภาษาไทย (UTF-8 multi-byte) แสดงเป็นอักขระแปลก เช่น `±πÅ±πÄ`
+
+**กฎเหล็ก:** ทุกครั้งที่สร้างไฟล์ JS เพื่อให้ JXA อ่านแล้วรันใน Chrome — ต้อง escape ตัวอักษรที่ไม่ใช่ ASCII ทั้งหมดเป็น `\uXXXX` เสมอ
+
+**วิธีทำ (Node.js):**
+```javascript
+function unicodeEscape(str) {
+  return str.split('').map(c =>
+    c.charCodeAt(0) > 127 ? '\\u' + c.charCodeAt(0).toString(16).padStart(4, '0') : c
+  ).join('');
+}
+// ใช้กับทุก string ภาษาไทยใน ADF body ก่อน JSON.stringify
+```
+
+**และบันทึกไฟล์ด้วย ASCII encoding:**
+```javascript
+fs.writeFileSync('/tmp/jira-fetch.js', jsCode, 'ascii');
+// ห้ามใช้ 'utf8' — จะพังเมื่อ JXA อ่าน
+```
+
 ---
 
 ## Critical Rules
