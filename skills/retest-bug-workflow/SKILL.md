@@ -238,6 +238,7 @@ fetch('/rest/api/3/issue/<TICKET>/attachments', {
 
 หลัง user อนุมัติแล้ว:
 
+### 7a. ลอง Atlassian MCP ก่อน
 ```
 Tool: mcp__208b743d-c680-4a36-b054-1030bcf5548d__addCommentToJiraIssue
 cloudId: humanintelligence.atlassian.net
@@ -245,6 +246,66 @@ issueIdOrKey: <TICKET_KEY>
 contentFormat: markdown
 commentBody: <approved comment>
 ```
+
+### 7b. Fallback — JXA + Chrome (ถ้า MCP 403)
+
+> **⚠️ ขั้นตอนนี้มี gotcha เรื่อง encoding ภาษาไทย — ดู section "JXA + ภาษาไทย" ด้านล่างเสมอ**
+
+**Pipeline ที่ถูกต้อง (ต้องทำตามนี้ทุกครั้ง ห้ามลัด):**
+
+**Step A — Node.js: สร้าง ADF body + escape เป็น ASCII-safe JS file**
+```javascript
+// 1. สร้าง ADF body ด้วยภาษาไทยจริงๆ
+const body = { type:'doc', version:1, content:[...] }; // Thai text ตรงๆ
+
+// 2. JSON.stringify ก่อน (ได้ JSON string ที่มี Thai chars)
+const bodyStr = JSON.stringify({ body });
+
+// 3. escape non-ASCII หลัง JSON.stringify เพื่อสร้าง JS string literal ที่ปลอดภัย
+const safe = bodyStr
+  .replace(/\\/g, '\\\\')
+  .replace(/'/g, "\\'")
+  .replace(/[^\x00-\x7F]/g, c => '\\u' + c.charCodeAt(0).toString(16).padStart(4,'0'));
+
+// 4. สร้าง JS code ที่จะรันใน Chrome
+const js = "window.__cr=null;fetch('https://humanintelligence.atlassian.net/rest/api/3/issue/<TICKET>/comment',"
+  + "{method:'POST',headers:{'Content-Type':'application/json','X-Atlassian-Token':'no-check'},"
+  + "credentials:'include',body:'" + safe + "'}).then(r=>r.json().then(b=>{"
+  + "window.__cr={status:r.status,id:b.id};})).catch(e=>{window.__cr={err:e.toString()};});";
+
+// 5. บันทึกด้วย ascii encoding + ตรวจสอบ
+fs.writeFileSync('/tmp/jira-fetch.js', js, 'ascii');
+const hasNonAscii = /[^\x00-\x7F]/.test(js);
+if (hasNonAscii) throw new Error('STILL HAS NON-ASCII!');
+```
+
+**Step B — JXA: อ่าน JS file แล้วรันใน Chrome Jira tab**
+```bash
+# trigger
+osascript -l JavaScript << 'EOF'
+var app = Application.currentApplication(); app.includeStandardAdditions = true;
+var jsCode = app.read("/tmp/jira-fetch.js");
+var chrome = Application('Google Chrome');
+var wins = chrome.windows();
+var jiraTab = null;
+for (var wi=0;wi<wins.length;wi++){var tabs=wins[wi].tabs();
+  for (var ti=0;ti<tabs.length;ti++){if(tabs[ti].url().includes('atlassian.net')){jiraTab=tabs[ti];}}}
+jiraTab ? (jiraTab.execute({javascript: jsCode}), "triggered") : "NO_JIRA_TAB";
+EOF
+
+# wait + read result
+sleep 4
+osascript -l JavaScript << 'EOF2'
+var chrome = Application('Google Chrome');
+var wins = chrome.windows();
+var jiraTab = null;
+for (var wi=0;wi<wins.length;wi++){var tabs=wins[wi].tabs();
+  for (var ti=0;ti<tabs.length;ti++){if(tabs[ti].url().includes('atlassian.net')){jiraTab=tabs[ti];}}}
+jiraTab ? jiraTab.execute({javascript: "JSON.stringify(window.__cr)"}) : "NO_TAB";
+EOF2
+```
+
+**ห้ามลัดขั้นตอน — ถ้าข้าม Step A ข้อ 3 จะได้ฟ้อนท์ต่างดาวทันที**
 
 ---
 
@@ -294,32 +355,24 @@ fields: { assignee: { accountId: "<dev accountId>" } }
 - Admin token ใช้กับ Gateway ไม่ได้ — Gateway รับเฉพาะ SP token
 - Login ใหม่ถ้า token หมดอายุ (15-30 นาที)
 
-### ⚠️ JXA + ภาษาไทย — encoding พัง (สำคัญมาก)
+### ⚠️ JXA + ภาษาไทย — encoding พัง (สำคัญมาก ผิดซ้ำ = ฟ้อนท์ต่างดาว)
 
-**ปัญหา:** JXA (`app.read(file)`) อ่านไฟล์เป็น Latin-1/MacRoman ทำให้ภาษาไทยแสดงเป็นอักขระแปลก (`±πÅ`) หรือ literal `ส` text
+**สาเหตุ:** JXA `app.read(file)` อ่านไฟล์เป็น Latin-1 — ถ้า JS file มี Thai chars จะพัง 2 แบบ:
+| ทำผิด | ผลลัพธ์ใน Jira |
+|-------|---------------|
+| ใส่ Thai chars ตรงๆ ใน JS file | อักขระแปลก `±πÅ±πÄ` |
+| escape ด้วย `\uXXXX` **ก่อน** `JSON.stringify` | literal text `ตาม` |
 
-**กฎเหล็ก:** ต้อง escape non-ASCII **หลัง** `JSON.stringify` เท่านั้น — ห้าม escape ก่อน `JSON.stringify` เพราะ `\` จะโดน escape ซ้อน กลายเป็น literal `ส` text ใน Jira
-
-**วิธีที่ถูกต้อง (Node.js):**
-```javascript
-// 1. build body ด้วยภาษาไทยจริงๆ ก่อน
-const bodyStr = JSON.stringify({ body }); // ยังมี Thai chars อยู่
-
-// 2. escape non-ASCII ทั้งหมด หลัง JSON.stringify เพื่อให้เป็น JS string literal ที่ปลอดภัย
-const safeBodyLiteral = bodyStr
-  .replace(/\\/g, '\\\\')      // escape backslashes ก่อนเสมอ
-  .replace(/'/g, "\\'")         // escape single quotes
-  .replace(/[^\x00-\x7F]/g,    // escape non-ASCII เป็น JS \uXXXX
-    c => '\\u' + c.charCodeAt(0).toString(16).padStart(4, '0'));
-
-// 3. embed เป็น single-quoted string literal ใน JS
-const js = `...body:'${safeBodyLiteral}'...`;
-
-// 4. บันทึกด้วย ascii encoding — ตรวจสอบว่าไม่มี non-ASCII เลย
-fs.writeFileSync('/tmp/jira-fetch.js', js, 'ascii');
-```
+**วิธีที่ถูกต้องเท่านั้น (ห้ามเปลี่ยน):**
+1. สร้าง ADF body ด้วย **Thai text จริงๆ**
+2. `JSON.stringify({body})` **ก่อน** — ได้ JSON string ที่มี Thai chars
+3. `.replace(/[^\x00-\x7F]/g, ...)` **หลัง** — แปลง Thai เป็น `\uXXXX` ใน JS string literal
+4. `fs.writeFileSync(path, js, 'ascii')` — ไฟล์ต้องเป็น ASCII ล้วน
+5. ตรวจสอบ: `if (/[^\x00-\x7F]/.test(js)) throw 'STILL HAS NON-ASCII'`
 
 **ทำไมถึงถูก:** Chrome decode `\uXXXX` ใน JS string literal กลับเป็น Thai chars จริงก่อนส่ง fetch → Jira รับ Thai text ถูกต้อง
+
+**ดู Step 7b สำหรับ code ตัวอย่างเต็ม**
 
 ---
 
