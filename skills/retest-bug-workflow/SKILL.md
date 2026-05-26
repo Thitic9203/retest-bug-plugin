@@ -166,8 +166,29 @@ fetch('https://<env>-web-portal.mycreditport.com/api/json-docs')
 - **ห้ามย่อ:** ห้ามเขียน "เหมือน case X" หรือ "same as above" — cURL เต็มทุก case
 - **Date format:** ใช้ YYYY-MM-DD ใน Response headers
 
-### Bug FE:
-- แนบรูป (screenshot) + bullet ไม่เกิน 3 ข้อ
+### Bug FE — กฎเหล็ก:
+- **ต้องแนบ screenshot ทุก test case** — upload เป็น attachment ของ issue ก่อน แล้วอ้างอิงชื่อไฟล์ใน Evidence ของ comment
+- **ชื่อไฟล์ชัดเจน** — ตั้งชื่อตาม pattern `tc<N>-<description>.png` (เช่น `tc1-toast-schedule.png`, `tc2-toast-delete.png`)
+- **bullet ไม่เกิน 3 ข้อต่อ case** — อธิบายพฤติกรรมที่เห็น vs คาดหวัง
+- **ห้ามละรูป** — ถ้าเทสหน้าเว็บ/UI ต้องมีภาพประกอบทุก case ไม่มีข้อยกเว้น
+
+**วิธี upload screenshot ผ่าน Jira REST API (browser session):**
+```javascript
+// อ่านไฟล์เป็น base64 ด้วย Node.js แล้วสร้าง JS ที่ upload ผ่าน Chrome
+var b64 = '<base64 data>';
+var binary = atob(b64);
+var arr = new Uint8Array(binary.length);
+for (var j = 0; j < binary.length; j++) arr[j] = binary.charCodeAt(j);
+var blob = new Blob([arr], {type: 'image/png'});
+var fd = new FormData();
+fd.append('file', blob, 'tc1-toast.png');
+fetch('/rest/api/3/issue/<TICKET>/attachments', {
+  method: 'POST',
+  headers: {'X-Atlassian-Token': 'no-check'},
+  credentials: 'include',
+  body: fd
+});
+```
 
 ---
 
