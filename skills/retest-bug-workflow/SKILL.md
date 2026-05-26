@@ -54,11 +54,21 @@ responseContentFormat: markdown
 
 ---
 
-## Step 3 — เลือก Skill ที่เหมาะสม
+## Step 3 — จำแนก Bug Type + เลือก Skill + กำหนด Comment Format
 
-พิจารณาขอบเขตการทดสอบจาก ticket แล้วเรียก skill ที่เหมาะที่สุด:
+> **⚠️ ตัดสินใจ 3 อย่างพร้อมกันตั้งแต่ Step นี้ — ห้ามเปลี่ยนกลางทาง**
 
-### เลือกตามลำดับนี้:
+### 3a. จำแนก Bug Type → กำหนด Comment Format ทันที
+
+| Bug Type | ต้อง screenshot? | Comment Format | API Endpoint |
+|----------|-----------------|----------------|-------------|
+| **Bug API** | ไม่ | v3 ADF | `/rest/api/3/.../comment` |
+| **Bug FE / UI** | **ต้อง** | **v2 wiki markup** | `/rest/api/2/.../comment` |
+
+> **กฎเหล็ก:** ถ้า ticket เป็น Bug FE → ตั้ง flag `COMMENT_FORMAT=v2` ตั้งแต่ตรงนี้ แล้วใช้ตลอด session
+> ห้ามเริ่ม v3 แล้วเปลี่ยนมา v2 ทีหลัง — format ต่างกันหมด เสียเวลาทำซ้ำ
+
+### 3b. เลือก Skill ที่เหมาะสม
 
 1. **Bug API (เป้าหมายหลัก)** → ใช้ **Playwright MCP** (`mcp__playwright__*`)
    - Login ผ่าน Playwright
@@ -248,12 +258,30 @@ fetch('/rest/api/3/issue/<TICKET>/attachments', {
 
 > **กฎ:** ตัดสินใจ v2 หรือ v3 ตั้งแต่ Step 6 (draft) แล้วใช้ตลอด — ห้ามเริ่ม v3 แล้วเปลี่ยนมา v2 ทีหลัง เพราะ format ต่างกันหมด
 
-### Pre-post checklist (ตรวจก่อนโพสต์ทุกครั้ง)
+### Pre-post checklist + Dry-run (ตรวจก่อนโพสต์ทุกครั้ง — ข้ามไม่ได้)
 
+**Checklist (ตรวจใน code ก่อน save JS file):**
 - [ ] emoji ❌ ✅ เป็นตัวจริงใน template literal (ไม่ใช่ `\\u274c`)
 - [ ] ไม่มี ticket key (เช่น `CP-12345`) ใน free text ที่จะโดน auto-link
 - [ ] JS file เป็น ASCII ล้วน (`/[^\x00-\x7F]/.test(js)` = false)
 - [ ] endpoint ตรงกับ format (v2 = wiki markup, v3 = ADF)
+
+**Dry-run (ตรวจ output หลัง save JS file — ก่อนโพสต์จริง):**
+```javascript
+// อ่าน JS file กลับมา → decode \uXXXX → ตรวจว่า content ถูกต้อง
+const saved = fs.readFileSync('/tmp/jira-comment.js', 'utf-8');
+const decoded = saved.replace(/\\u([0-9a-f]{4})/gi, (_, hex) =>
+  String.fromCharCode(parseInt(hex, 16))
+);
+// ตรวจสอบ:
+// 1. ❌ ✅ เป็น emoji จริง (ไม่ใช่ ❌ literal)
+console.log('Has real emoji:', /[❌✅]/.test(decoded));
+// 2. ไม่มี ticket key ที่จะ auto-link
+console.log('Has ticket key:', /[A-Z]+-\d+/.test(decoded));
+// 3. ภาษาไทยอ่านได้
+console.log('Thai sample:', decoded.match(/[฀-๿]+/)?.[0]);
+```
+> ถ้า dry-run fail → แก้ template แล้ว re-generate ก่อนโพสต์ — ห้ามโพสต์แล้วค่อยแก้ทีหลัง
 
 ### 7a. ลอง Atlassian MCP ก่อน
 ```
@@ -466,3 +494,27 @@ fields: { assignee: { accountId: "<dev accountId>" } }
 7. **ใช้ "Retest Result: PASSED ✅" หรือ "Retest Result: FAILED ❌" เท่านั้น** — ห้ามรูปแบบอื่น
 8. **Step 8 ทำต่อเนื่องหลัง post** — ไม่ต้องถามซ้ำ (transition + assign + แจ้ง user)
 9. **ห้ามบอกว่าทดสอบไม่ได้เพราะไม่มีข้อมูล** — ต้องหาทางสร้าง/จัดเตรียม test data มาให้ได้เสมอ (ดู Step 4c)
+10. **ตัดสินใจ v2/v3 ตั้งแต่ Step 3** — Bug FE → v2 wiki markup, Bug API → v3 ADF (ห้ามเปลี่ยนกลางทาง)
+11. **Dry-run ก่อนโพสต์ทุกครั้ง** — decode \uXXXX กลับมาตรวจ emoji + Thai + ticket key ก่อนส่งจริง (ดู Step 7 Pre-post checklist)
+
+---
+
+## Post-Mortem Log
+
+> บันทึก lesson learned จาก session ที่เจอปัญหา — ป้องกันไม่ให้ซ้ำ
+
+### PM-1: CP-11507 Comment Format พังซ้ำ 4 รอบ (2026-05-26)
+
+**ปัญหา:** โพสต์ comment 4 ครั้ง แต่ละครั้งพังคนละจุด (Thai encoding, emoji literal, auto-link) เสียเวลา ~2 ชม.
+
+**Root cause:**
+1. ไม่ได้จำแนก Bug FE ตั้งแต่ Step 3 → เริ่มด้วย v3 ADF → ต้องเปลี่ยนมา v2 wiki markup กลางทางเมื่อ inline image ทำไม่ได้ใน ADF
+2. v2 wiki markup มี gotcha ชุดใหม่ (emoji escape, auto-link) ที่ไม่เคยเจอใน v3
+3. ไม่มี dry-run → โพสต์แล้วค่อยเห็นปัญหา → delete + re-post วนซ้ำ
+
+**Fixes applied:**
+- Step 3a: เพิ่ม Bug Type classification → กำหนด comment format (v2/v3) ทันที
+- Step 7: เพิ่ม pre-post checklist + dry-run verification script
+- Gotchas: เพิ่มตาราง v2 wiki markup gotchas + วิธีแก้
+
+**Lesson:** ตัดสินใจ format ตั้งแต่ต้น + validate ก่อนส่ง = ไม่ต้อง re-post
