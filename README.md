@@ -1,21 +1,21 @@
 # retest-bug
 
-Claude Code plugin ที่ทำให้การรีเทสบัคจาก Jira เสร็จใน **1 คำสั่ง** — แค่ให้ ticket มา ที่เหลือทำให้หมด
+A Claude Code plugin that turns Jira bug retesting into a **single command**. Hand it a ticket — it handles the rest.
 
-## ทำไมต้องใช้
+## Why Use This
 
-| เดิม (manual) | ใช้ plugin |
-|---------------|-----------|
-| เปิด ticket อ่าน → login portal → ทดสอบเอง → จด evidence → เขียน comment → copy ลง Jira → move status → assign dev | พิมพ์ `/retest-bug CP-12345` แล้วรอ approve comment ที่เดียว |
-| ใช้เวลา **30-60 นาที** ต่อ ticket | ใช้เวลา **5-10 นาที** ต่อ ticket |
-| ลืม transition / ลืม assign / format ไม่ consistent | ทำให้ครบทุกขั้นตอน ทุกครั้ง format เดียวกันหมด |
+| Without plugin | With plugin |
+|----------------|-------------|
+| Open ticket → login portal → test manually → collect evidence → write comment → paste into Jira → move status → assign dev | Type `/retest-bug CP-12345` and approve the comment |
+| **30–60 min** per ticket | **5–10 min** per ticket |
+| Inconsistent format, forgotten transitions, missed assignments | Consistent output, every step completed, every time |
 
-## สิ่งที่ได้
+## What You Get
 
-- **ทดสอบให้อัตโนมัติ** — login portal, เรียก API, เทียบ Swagger spec, จับ screenshot (Bug FE)
-- **Comment สำเร็จรูป** — evidence ครบ, format ตาม guide, รอแค่กด approve
-- **ปิดงานให้จบ** — transition (PASSED → Ready to Demo / FAILED → In Progress) + assign กลับ dev อัตโนมัติ
-- **ไม่ต้องจำขั้นตอน** — อ่าน retest guide + เลือก test strategy + เก็บหลักฐาน ทำให้หมด
+- **Automated testing** — logs into the portal, calls APIs, compares against Swagger spec, captures screenshots for UI bugs
+- **Ready-to-post comment** — full evidence, consistent format, just approve and it posts for you
+- **Auto-close workflow** — transitions the ticket (PASSED → Ready to Demo / FAILED → In Progress) and assigns it back to the dev
+- **Zero memorization** — reads the retest guide, picks the right test strategy, collects all evidence automatically
 
 ## Install
 
@@ -32,5 +32,5 @@ Claude Code plugin ที่ทำให้การรีเทสบัคจ�
 
 ## Prerequisites
 
-- **VPN:** OpenVPN Connect → `ovpn.mycreditport.com` (ต้อง connect ก่อน)
-- **Jira:** login `humanintelligence.atlassian.net` ใน Chrome (ขอครั้งเดียวต่อ session)
+- **VPN:** Connect to `ovpn.mycreditport.com` via OpenVPN before starting
+- **Jira:** Log in to `humanintelligence.atlassian.net` in Chrome (once per session)
