@@ -167,10 +167,11 @@ fetch('https://<env>-web-portal.mycreditport.com/api/json-docs')
 - **Date format:** ใช้ YYYY-MM-DD ใน Response headers
 
 ### Bug FE — กฎเหล็ก:
-- **ต้องแนบ screenshot ทุก test case** — upload เป็น attachment ของ issue ก่อน แล้วอ้างอิงชื่อไฟล์ใน Evidence ของ comment
+- **ต้องแนบ screenshot ทุก test case** — upload เป็น attachment ของ issue ก่อน แล้ว embed inline ใน comment
 - **ชื่อไฟล์ชัดเจน** — ตั้งชื่อตาม pattern `tc<N>-<description>.png` (เช่น `tc1-toast-schedule.png`, `tc2-toast-delete.png`)
 - **bullet ไม่เกิน 3 ข้อต่อ case** — อธิบายพฤติกรรมที่เห็น vs คาดหวัง
 - **ห้ามละรูป** — ถ้าเทสหน้าเว็บ/UI ต้องมีภาพประกอบทุก case ไม่มีข้อยกเว้น
+- **embed ภาพ inline** — ใช้ `!filename.png|width=600!` ใน wiki markup (ดู Step 7c)
 
 **วิธี upload screenshot ผ่าน Jira REST API (browser session):**
 ```javascript
@@ -307,6 +308,55 @@ EOF2
 
 **ห้ามลัดขั้นตอน — ถ้าข้าม Step A ข้อ 3 จะได้ฟ้อนท์ต่างดาวทันที**
 
+### 7c. Bug FE ที่มี screenshot — ใช้ v2 API + wiki markup (แทน v3 ADF)
+
+> **⚠️ ใช้ v2 เมื่อต้อง embed ภาพ inline** — v3 ADF ต้องใช้ `mediaSingle` node + `mediaApiFileId` ซึ่ง Jira REST API ไม่ return → ใช้ v2 wiki markup `!filename.png|width=600!` แทน
+
+**Pipeline (เหมือน 7b แต่เปลี่ยน body format + endpoint):**
+
+```javascript
+// Node.js: สร้าง wiki markup body
+const wikiBody = `*Retest Result: FAILED ❌*
+
+*Env:* PD3 ({{https://pd3-web-portal.mycreditport.com/admin}})
+*Date:* 2026-05-26
+
+----
+
+||Test Case||Action||Result||Status||
+|TC1|...|...|❌|
+
+----
+
+*Evidence*
+
+*TC1 — description:*
+Toast ที่ปรากฏ: {{ข้อความจริง}}
+
+!tc1-screenshot.png|width=600!
+`;
+
+// JSON.stringify → escape → save
+const payload = JSON.stringify({ body: wikiBody });
+const safe = payload
+  .replace(/\\/g, '\\\\')
+  .replace(/'/g, "\\'")
+  .replace(/[^\x00-\x7F]/g, c => '\\u' + c.charCodeAt(0).toString(16).padStart(4,'0'));
+
+// ⚠️ ใช้ /rest/api/2/ ไม่ใช่ /rest/api/3/
+const js = "fetch('https://humanintelligence.atlassian.net/rest/api/2/issue/<TICKET>/comment',"
+  + "{method:'POST',headers:{'Content-Type':'application/json','X-Atlassian-Token':'no-check'},"
+  + "credentials:'include',body:'" + safe + "'})...";
+
+fs.writeFileSync('/tmp/jira-v2-comment.js', js, 'ascii');
+```
+
+**กฎเหล็ก v2 wiki markup:**
+- **emoji/icon ใช้ตัวจริงเท่านั้น** — เขียน `❌` ตรงๆ ใน template literal, ห้ามเขียน `\\u274c` (double backslash) เพราะจะกลายเป็น literal text
+- **Jira auto-links issue keys** — `CP-12345` ใน text จะโดน expand เป็น ticket link ทั้งดุ้น. แก้โดยเลี่ยงใส่ ticket key ใน toast text / table cell หรือครอบด้วย `{{CP-12345}}` (monospace)
+- **`!filename.png|width=600!`** — ไฟล์ต้อง upload เป็น attachment ก่อน (Step 5) ถึงจะ embed ได้
+- **endpoint ต้องเป็น v2** — `/rest/api/2/issue/<TICKET>/comment` (v3 ไม่รับ wiki markup)
+
 ---
 
 ## Step 8 — ปิดงาน (ทำต่อเนื่องทันทีหลัง post comment ไม่ต้องถามซ้ำ)
@@ -354,6 +404,19 @@ fields: { assignee: { accountId: "<dev accountId>" } }
 - ใช้ full URL เสมอ (ห้าม relative path)
 - Admin token ใช้กับ Gateway ไม่ได้ — Gateway รับเฉพาะ SP token
 - Login ใหม่ถ้า token หมดอายุ (15-30 นาที)
+
+### ⚠️ v2 Wiki Markup Gotchas
+
+| ทำผิด | ผลลัพธ์ใน Jira |
+|-------|---------------|
+| ใช้ `\\u274c` (double backslash) ใน template literal | literal text `❌` แทน ❌ |
+| ใส่ ticket key เช่น `CP-12345` ใน text | Jira auto-link เป็น ticket ทั้ง title + status |
+| ใช้ v3 endpoint (`/rest/api/3/`) กับ wiki markup body | Error / format ผิด |
+
+**วิธีที่ถูก:**
+- emoji: เขียนตัวจริง `❌` `✅` ใน template literal → escape step จัดการให้
+- ticket key: เลี่ยงใส่ หรือใช้ `{{CP-12345}}` monospace
+- endpoint: ใช้ v2 เท่านั้น สำหรับ wiki markup
 
 ### ⚠️ JXA + ภาษาไทย — encoding พัง (สำคัญมาก ผิดซ้ำ = ฟ้อนท์ต่างดาว)
 
