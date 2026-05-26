@@ -109,7 +109,24 @@ playwright_click → submit button
 
 **Fallback:** ถ้า login ไม่ผ่าน (OTP, CF WAF) → ขอ Bearer token จาก user แล้วรอ
 
-### 4c. ทดสอบ API
+### 4c. จัดเตรียม Test Data
+
+> **กฎเหล็ก:** ห้ามบอกว่า "ทดสอบไม่ได้เพราะไม่มีข้อมูล" — ต้องหาทางสร้าง/จัดเตรียมข้อมูลเพื่อทดสอบมาให้ได้เสมอ
+
+**ลำดับหา test data:**
+
+1. **ใช้ข้อมูลที่มีอยู่** — GET list API เพื่อหา record ที่ใช้ทดสอบได้
+2. **สร้างข้อมูลใหม่** — ถ้าไม่มี record ที่เหมาะ → POST/CREATE ผ่าน API สร้างขึ้นมาเอง
+3. **ใช้ Swagger schema เป็นแนวทาง** — ดู required fields + constraints จาก `/api/json-docs` แล้วสร้าง payload ที่ถูกต้อง
+4. **Clone จาก record ที่มี** — GET record ที่มีอยู่ → แก้ field ที่ต้องการ → POST เป็น record ใหม่
+5. **ถาม user เป็นทางเลือกสุดท้าย** — เฉพาะกรณีที่ต้องใช้ข้อมูลเฉพาะทางจริงๆ ที่สร้างเองไม่ได้ (เช่น ข้อมูลจาก external system)
+
+**ข้อควรระวัง:**
+- ใช้ชื่อที่ระบุชัดว่าเป็น test data (เช่น prefix `[TEST]` หรือ `test-retest-`)
+- ห้ามแก้ไข/ลบข้อมูลจริงในระบบ — สร้างใหม่เสมอ
+- บันทึก ID ของ test data ที่สร้าง เพื่อยืนยันข้อมูลเดิมไม่ถูกเปลี่ยนแปลงหลังเทส
+
+### 4d. ทดสอบ API
 
 ใช้ `playwright_evaluate` + `fetch()` เรียก API — **ต้องใช้ full URL เสมอ**
 
@@ -118,7 +135,7 @@ playwright_click → submit button
 2. **Bug case** — เรียกตาม test step ที่เคยเจอบัค
 3. **Edge cases** — กรณีขอบ (ถ้ามี)
 
-### 4d. เทียบ Swagger
+### 4e. เทียบ Swagger
 
 ดึง spec จาก `/api/json-docs`:
 
@@ -263,3 +280,4 @@ fields: { assignee: { accountId: "<dev accountId>" } }
 6. **ห้ามใส่ "Retested by:"** — ตัดออกเสมอ
 7. **ใช้ "Retest Result: PASSED ✅" หรือ "Retest Result: FAILED ❌" เท่านั้น** — ห้ามรูปแบบอื่น
 8. **Step 8 ทำต่อเนื่องหลัง post** — ไม่ต้องถามซ้ำ (transition + assign + แจ้ง user)
+9. **ห้ามบอกว่าทดสอบไม่ได้เพราะไม่มีข้อมูล** — ต้องหาทางสร้าง/จัดเตรียม test data มาให้ได้เสมอ (ดู Step 4c)
