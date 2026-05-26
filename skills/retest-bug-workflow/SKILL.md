@@ -229,15 +229,20 @@ commentBody: <approved comment>
 
 ## Step 8 — ปิดงาน (ทำต่อเนื่องทันทีหลัง post comment ไม่ต้องถามซ้ำ)
 
-### 8a. Transition → Ready to Demo
+### 8a. Transition ตามผลเทส
+
+| ผลเทส | Transition target |
+|-------|------------------|
+| PASSED | Ready to Demo |
+| FAILED | In Progress |
 
 ดึง transition ID ก่อน:
 ```
-Tool: getTransitionsForJiraIssue → หา "Ready to Demo"
+Tool: getTransitionsForJiraIssue → หา transition ตามตารางด้านบน
 Tool: transitionJiraIssue → ใช้ transition ID ที่ได้
 ```
 
-### 8b. หา dev ที่ทำเรื่องนี้
+### 8b. หา dev ที่ทำเรื่องนี้ (คนที่ move → In Progress ล่าสุด)
 
 ```
 Tool: getJiraIssue (expand: changelog)
@@ -245,7 +250,7 @@ Tool: getJiraIssue (expand: changelog)
 → เอา author.accountId ของ entry ล่าสุด
 ```
 
-### 8c. Assign กลับ dev
+### 8c. Assign กลับ dev คนนั้น (ทั้ง PASSED และ FAILED)
 
 ```
 Tool: editJiraIssue
