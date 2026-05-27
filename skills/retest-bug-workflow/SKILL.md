@@ -1,6 +1,6 @@
 ---
 name: retest-bug-workflow
-description: This skill should be used when retesting a bug from a Jira ticket, verifying a bug fix, or checking whether an issue is resolved on CreditPort environments. Handles the full retest flow — reading the ticket, logging into the portal, running API or FE tests, comparing responses against Swagger spec, drafting a Jira comment with full evidence, posting the comment, transitioning the ticket, and assigning it back to the dev. Common triggers — "retest this bug", "verify the fix on CP-12345", "check if CP-12345 is fixed", "retest bug CP-12345".
+description: This skill should be used when retesting a bug from a Jira ticket, verifying a bug fix, or checking whether an issue is resolved. Handles the full retest flow — reading the ticket, logging into the portal, running API or FE tests, comparing responses against Swagger spec, drafting a Jira comment with full evidence, posting the comment, transitioning the ticket, and assigning it back to the dev. Common triggers — "retest this bug", "verify the fix on PROJ-123", "check if PROJ-123 is fixed", "retest bug PROJ-123".
 ---
 
 # Retest Bug Workflow
@@ -9,29 +9,40 @@ description: This skill should be used when retesting a bug from a Jira ticket, 
 
 Skill สำหรับรีเทสบัคจาก Jira ticket แบบครบ flow — ดึง ticket, login, ทดสอบ, เทียบ Swagger, draft comment, post, ปิดงาน
 
+**Project-agnostic:** ใช้ได้ทุกโปรเจกต์ — อ่าน project config จาก guide file ใน Step 1
+
 ## Step 0 — รับ Ticket
 
 ถ้า user ยังไม่ได้ระบุ ticket:
 
-> ต้องการให้รีเทสบัคไหนครับ กรุณาระบุลิงก์หรือ ticket key (เช่น CP-12345 หรือ https://humanintelligence.atlassian.net/browse/CP-12345)
+> ต้องการให้รีเทสบัคไหนครับ กรุณาระบุลิงก์หรือ ticket key (เช่น PROJ-123 หรือ https://your-org.atlassian.net/browse/PROJ-123)
 
 **รอ user ตอบก่อน** — ห้ามทำอะไรจนกว่าจะได้ ticket
 
-เมื่อได้ ticket แล้ว → แยก issue key (เช่น `CP-12345`) จากลิงก์หรือข้อความ
+เมื่อได้ ticket แล้ว → แยก issue key (เช่น `PROJ-123`) จากลิงก์หรือข้อความ → จำ Jira domain จากลิงก์ (เช่น `your-org.atlassian.net`)
 
 ---
 
-## Step 1 — อ่าน Retest Guide
+## Step 1 — อ่าน Project Config / Retest Guide
 
-อ่าน guide ก่อนเริ่มทำงานเสมอ:
+อ่าน project config ก่อนเริ่มทำงานเสมอ:
 
-```
-Read file: references/credit-port-retest-guide.md (relative to this SKILL.md)
-```
+**ลำดับหา config:**
+1. ถาม user ว่ามี retest guide / project config ไหม → ถ้ามีให้ user ระบุ path
+2. ดูใน `references/` ว่ามี guide เฉพาะโปรเจกต์ไหม (เช่น `references/credit-port-retest-guide.md`)
+3. ถ้าไม่มี → ใช้ข้อมูลจาก ticket + Swagger เป็นหลัก + ถาม user เพิ่มเติมตามจำเป็น
 
-> **Note:** guide อยู่ใน repo ที่ `references/credit-port-retest-guide.md` — ใช้ได้ทุกเครื่องที่ clone repo มา
+> **Template สำหรับสร้าง config ใหม่:** ดู `references/project-config-template.md`
 
-**กฎเหล็ก:** ปฏิบัติตาม guide ทุกข้อ — template, format, กฎเหล็กทุกข้อ ห้ามข้าม ห้ามดัดแปลง
+**กฎเหล็ก:** ปฏิบัติตาม guide/config ทุกข้อ — template, format, กฎเหล็กทุกข้อ ห้ามข้าม ห้ามดัดแปลง
+
+**จาก config ต้องจับข้อมูล:**
+- Jira Cloud ID (เช่น `your-org.atlassian.net`)
+- Base URLs ของแต่ละ environment
+- Portal types + login method
+- Credentials (ดูจาก config เท่านั้น ห้ามใส่ใน SKILL.md)
+- Swagger / API docs URL
+- Error documentation URL (ถ้ามี)
 
 ---
 
@@ -41,19 +52,19 @@ Read file: references/credit-port-retest-guide.md (relative to this SKILL.md)
 
 ```
 Tool: Atlassian MCP → getJiraIssue
-cloudId: humanintelligence.atlassian.net
+cloudId: <JIRA_CLOUD_ID จาก config>
 issueIdOrKey: <TICKET_KEY>
 responseContentFormat: markdown
 ```
 > MCP tool ID อาจต่างกันในแต่ละ session — ใช้ ToolSearch หา "getJiraIssue" เพื่อหา tool ID จริง
 
 **จับข้อมูลจาก ticket:**
-- Environment (PD3 / dev)
+- Environment
 - Test Steps
 - Expected Result
 - Actual Result
 - API endpoint
-- Bug type tag: `[SP]` = SP token, `[BO]`/`[Admin]` = Admin token
+- Bug type tag (ถ้ามี เช่น `[SP]`, `[BO]`, `[Admin]` — ขึ้นกับแต่ละโปรเจกต์)
 
 ---
 
@@ -103,25 +114,26 @@ Skill tool: <skill-name>
 
 ### 4a. ระบุ Environment
 
-| Tag ใน ticket | Portal | Base URL | Token type |
-|---|---|---|---|
-| `[BO]` / `[Admin]` / ไม่มี tag | Admin Portal | `https://<env>-web-portal.mycreditport.com` | Admin token |
-| `[SP]` | SP Portal | `https://<env>-sp.mycreditport.com` | SP token (ต้อง OTP flow) |
+ดู environment จาก **project config** — แต่ละโปรเจกต์มี URL pattern และ portal types ต่างกัน
+
+**ข้อมูลที่ต้องดึงจาก config:**
+- Base URL ของ environment ที่ระบุใน ticket
+- Portal type + login URL
+- Token type ที่ต้องใช้
 
 ### 4b. Login ผ่าน Playwright
 
-**Admin (BO):**
 ```
-playwright_navigate → <env>-web-portal.mycreditport.com/admin
-playwright_fill → email: <ดู credentials ใน retest guide>
-playwright_fill → password: <ดู credentials ใน retest guide>
+playwright_navigate → <LOGIN_URL จาก config>
+playwright_fill → email: <ดู credentials ใน project config>
+playwright_fill → password: <ดู credentials ใน project config>
 playwright_click → submit button
 ```
-> Credentials อยู่ใน retest guide section "Environment" — ห้ามใส่ password ตรงๆ ใน skill file
+> Credentials อยู่ใน project config เท่านั้น — ห้ามใส่ password ตรงๆ ใน skill file
 
-**SP:** ต้อง login ผ่าน UI + OTP flow (ดูรายละเอียดใน guide section "SP token")
+**OTP/SSO flow:** ดูรายละเอียดใน project config (แต่ละโปรเจกต์ต่างกัน)
 
-**Fallback:** ถ้า login ไม่ผ่าน (OTP, CF WAF) → ขอ Bearer token จาก user แล้วรอ
+**Fallback:** ถ้า login ไม่ผ่าน (OTP, CF WAF, SSO) → ขอ Bearer token จาก user แล้วรอ
 
 ### 4c. จัดเตรียม Test Data
 
@@ -131,7 +143,7 @@ playwright_click → submit button
 
 1. **ใช้ข้อมูลที่มีอยู่** — GET list API เพื่อหา record ที่ใช้ทดสอบได้
 2. **สร้างข้อมูลใหม่** — ถ้าไม่มี record ที่เหมาะ → POST/CREATE ผ่าน API สร้างขึ้นมาเอง
-3. **ใช้ Swagger schema เป็นแนวทาง** — ดู required fields + constraints จาก `/api/json-docs` แล้วสร้าง payload ที่ถูกต้อง
+3. **ใช้ Swagger schema เป็นแนวทาง** — ดู required fields + constraints แล้วสร้าง payload ที่ถูกต้อง
 4. **Clone จาก record ที่มี** — GET record ที่มีอยู่ → แก้ field ที่ต้องการ → POST เป็น record ใหม่
 5. **ถาม user เป็นทางเลือกสุดท้าย** — เฉพาะกรณีที่ต้องใช้ข้อมูลเฉพาะทางจริงๆ ที่สร้างเองไม่ได้ (เช่น ข้อมูลจาก external system)
 
@@ -151,23 +163,21 @@ playwright_click → submit button
 
 ### 4e. เทียบ Swagger
 
-ดึง spec จาก `/api/json-docs`:
+ดึง spec จาก Swagger URL ที่ระบุใน project config:
 
 ```javascript
-fetch('https://<env>-web-portal.mycreditport.com/api/json-docs')
+fetch('<SWAGGER_JSON_URL จาก config>')
   .then(r => r.json())
   .then(spec => { /* เทียบ responses, schema */ })
 ```
 
 **ลำดับเทียบ:**
 1. Response code → ต้องตรง Swagger
-2. Response message → ถ้า Swagger ไม่ระบุ → ดู Confluence Error Documentation
+2. Response message → ถ้า Swagger ไม่ระบุ → ดู Error Documentation (ถ้ามี ดู URL จาก config)
 3. ทั้งคู่ตรง → PASSED
 4. Code ไม่ตรง → FAILED
 5. Code ตรงแต่ message ไม่ตรง → FAILED
-6. ทั้ง Swagger + Confluence ไม่ระบุ → BLOCKED
-
-**Confluence Error Documentation:** `https://humanintelligence.atlassian.net/wiki/spaces/CPM/pages/65273857/Error+Documentation`
+6. ทั้ง Swagger + Error Docs ไม่ระบุ → BLOCKED
 
 ---
 
@@ -238,7 +248,7 @@ fetch('/rest/api/3/issue/<TICKET>/attachments', {
 
 **Evidence — API Response**
 
-> cURL เต็ม + Response เต็มทุก case (ดู guide สำหรับ format)
+> cURL เต็ม + Response เต็มทุก case (ดู project config สำหรับ format)
 
 **Before fix:** <old behavior>
 **After fix:** <new behavior>
@@ -266,7 +276,7 @@ fetch('/rest/api/3/issue/<TICKET>/attachments', {
 
 **Checklist (ตรวจใน code ก่อน save JS file):**
 - [ ] emoji ❌ ✅ เป็นตัวจริงใน template literal (ไม่ใช่ `\\u274c`)
-- [ ] ไม่มี ticket key (เช่น `CP-12345`) ใน free text ที่จะโดน auto-link
+- [ ] ไม่มี ticket key ใน free text ที่จะโดน auto-link
 - [ ] JS file เป็น ASCII ล้วน (`/[^\x00-\x7F]/.test(js)` = false)
 - [ ] endpoint ตรงกับ format (v2 = wiki markup, v3 = ADF)
 
@@ -290,7 +300,7 @@ console.log('Thai sample:', decoded.match(/[฀-๿]+/)?.[0]);
 ### 7a. ลอง Atlassian MCP ก่อน
 ```
 Tool: Atlassian MCP → addCommentToJiraIssue
-cloudId: humanintelligence.atlassian.net
+cloudId: <JIRA_CLOUD_ID จาก config>
 issueIdOrKey: <TICKET_KEY>
 contentFormat: markdown
 commentBody: <approved comment>
@@ -317,8 +327,8 @@ const safe = bodyStr
   .replace(/'/g, "\\'")
   .replace(/[^\x00-\x7F]/g, c => '\\u' + c.charCodeAt(0).toString(16).padStart(4,'0'));
 
-// 4. สร้าง JS code ที่จะรันใน Chrome
-const js = "window.__cr=null;fetch('https://humanintelligence.atlassian.net/rest/api/3/issue/<TICKET>/comment',"
+// 4. สร้าง JS code ที่จะรันใน Chrome — ใช้ JIRA_CLOUD_ID จาก config
+const js = "window.__cr=null;fetch('https://<JIRA_CLOUD_ID>/rest/api/3/issue/<TICKET>/comment',"
   + "{method:'POST',headers:{'Content-Type':'application/json','X-Atlassian-Token':'no-check'},"
   + "credentials:'include',body:'" + safe + "'}).then(r=>r.json().then(b=>{"
   + "window.__cr={status:r.status,id:b.id};})).catch(e=>{window.__cr={err:e.toString()};});";
@@ -367,8 +377,8 @@ EOF2
 // Node.js: สร้าง wiki markup body
 const wikiBody = `*Retest Result: FAILED ❌*
 
-*Env:* PD3 ({{https://pd3-web-portal.mycreditport.com/admin}})
-*Date:* 2026-05-26
+*Env:* <ENV_NAME> ({{<ENV_URL>}})
+*Date:* <YYYY-MM-DD>
 
 ----
 
@@ -393,7 +403,7 @@ const safe = payload
   .replace(/[^\x00-\x7F]/g, c => '\\u' + c.charCodeAt(0).toString(16).padStart(4,'0'));
 
 // ⚠️ ใช้ /rest/api/2/ ไม่ใช่ /rest/api/3/
-const js = "fetch('https://humanintelligence.atlassian.net/rest/api/2/issue/<TICKET>/comment',"
+const js = "fetch('https://<JIRA_CLOUD_ID>/rest/api/2/issue/<TICKET>/comment',"
   + "{method:'POST',headers:{'Content-Type':'application/json','X-Atlassian-Token':'no-check'},"
   + "credentials:'include',body:'" + safe + "'})...";
 
@@ -402,7 +412,7 @@ fs.writeFileSync('/tmp/jira-v2-comment.js', js, 'ascii');
 
 **กฎเหล็ก v2 wiki markup:**
 - **emoji/icon ใช้ตัวจริงเท่านั้น** — เขียน `❌` ตรงๆ ใน template literal, ห้ามเขียน `\\u274c` (double backslash) เพราะจะกลายเป็น literal text
-- **Jira auto-links issue keys** — `CP-12345` ใน text จะโดน expand เป็น ticket link ทั้งดุ้น. แก้โดยเลี่ยงใส่ ticket key ใน toast text / table cell หรือครอบด้วย `{{CP-12345}}` (monospace)
+- **Jira auto-links issue keys** — ticket key ใน text จะโดน expand เป็น ticket link ทั้งดุ้น. แก้โดยเลี่ยงใส่ ticket key ใน toast text / table cell หรือครอบด้วย `{{PROJ-123}}` (monospace)
 - **`!filename.png|width=600!`** — ไฟล์ต้อง upload เป็น attachment ก่อน (Step 5) ถึงจะ embed ได้
 - **endpoint ต้องเป็น v2** — `/rest/api/2/issue/<TICKET>/comment` (v3 ไม่รับ wiki markup)
 
@@ -423,6 +433,8 @@ Tool: getTransitionsForJiraIssue → หา transition ตามตาราง�
 Tool: transitionJiraIssue → ใช้ transition ID ที่ได้
 ```
 
+> **Note:** ชื่อ transition อาจต่างกันในแต่ละโปรเจกต์ — ดูจาก project config หรือ getTransitionsForJiraIssue
+
 ### 8b. หา dev ที่ทำเรื่องนี้ (คนที่ move → In Progress ล่าสุด)
 
 ```
@@ -441,7 +453,7 @@ fields: { assignee: { accountId: "<dev accountId>" } }
 ### 8d. แจ้ง user
 
 ```
-เรียบร้อยแล้ว รีวิวผลงานได้ที่ https://humanintelligence.atlassian.net/browse/<TICKET_KEY>
+เรียบร้อยแล้ว รีวิวผลงานได้ที่ https://<JIRA_CLOUD_ID>/browse/<TICKET_KEY>
 ```
 
 ---
@@ -467,7 +479,7 @@ fields: { assignee: { accountId: "<dev accountId>" } }
 **สรุปสั้น:**
 - `about:blank` หลัง evaluate → เช็ค `window.location.href` ก่อนทุก step
 - ใช้ full URL เสมอ (ห้าม relative path)
-- Admin token ใช้กับ Gateway ไม่ได้ — ต้องใช้ SP token
+- ดู project config สำหรับ token type + ข้อจำกัดเฉพาะโปรเจกต์
 - v2 wiki markup: emoji ใช้ตัวจริง, ticket key ครอบด้วย `{{...}}`, endpoint ต้องเป็น v2
 - JXA Thai: `JSON.stringify` ก่อน → escape non-ASCII หลัง → save เป็น ASCII
 
@@ -475,7 +487,7 @@ fields: { assignee: { accountId: "<dev accountId>" } }
 
 ## Critical Rules
 
-1. **อ่าน guide ก่อนเริ่มเสมอ** — `references/credit-port-retest-guide.md`
+1. **อ่าน project config ก่อนเริ่มเสมอ** — ดึง URLs, credentials, environment จาก config
 2. **ห้าม post comment โดยไม่ได้อนุมัติ** — draft ก่อนเสมอ
 3. **cURL + Response เต็มทุก case** — ห้ามย่อ ห้าม "same as above"
 4. **Swagger = source of truth** — ไม่ใช่ ticket (ticket อาจไม่อัปเดต)
@@ -493,4 +505,4 @@ fields: { assignee: { accountId: "<dev accountId>" } }
 
 > รายละเอียดเต็มอยู่ใน `references/post-mortem-log.md`
 >
-> **สรุป PM-1 (CP-11507):** ตัดสินใจ v2/v3 ตั้งแต่ต้น + dry-run ก่อนส่ง = ไม่ต้อง re-post
+> **สรุป PM-1:** ตัดสินใจ v2/v3 ตั้งแต่ต้น + dry-run ก่อนส่ง = ไม่ต้อง re-post

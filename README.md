@@ -30,10 +30,17 @@ A Claude Code plugin that turns Jira bug retesting into a **single command**. Ha
 /retest-bug https://your-org.atlassian.net/browse/PROJ-123
 ```
 
+## First-Time Setup
+
+1. Copy `references/project-config-template.md` to `references/<your-project>-retest-guide.md`
+2. Fill in your project's URLs, environments, credentials, architecture
+3. When you run `/retest-bug`, point the skill to your config file
+
 ## Prerequisites
 
 - **VPN:** Connect to your project's VPN if the test environment requires it
 - **Jira:** Log in to your Atlassian workspace in Chrome (once per session)
+- **Project config:** A filled-in project config file (see First-Time Setup)
 
 ## Skills
 
@@ -45,7 +52,8 @@ A Claude Code plugin that turns Jira bug retesting into a **single command**. Ha
 
 | File | Purpose |
 |------|---------|
-| [credit-port-retest-guide.md](./skills/retest-bug-workflow/references/credit-port-retest-guide.md) | Full retest guide — workflow, templates, credentials, gotchas |
+| [project-config-template.md](./skills/retest-bug-workflow/references/project-config-template.md) | Template สำหรับสร้าง project config ใหม่ |
+| [credit-port-retest-guide.md](./skills/retest-bug-workflow/references/credit-port-retest-guide.md) | ตัวอย่าง project config — CreditPort MHESI |
 | [gotchas.md](./skills/retest-bug-workflow/references/gotchas.md) | Known pitfalls (encoding, v2 wiki markup, JXA) |
 | [post-mortem-log.md](./skills/retest-bug-workflow/references/post-mortem-log.md) | Lesson learned log |
 | [post-mortem-template.md](./skills/retest-bug-workflow/references/post-mortem-template.md) | Template สำหรับบันทึก post-mortem |
@@ -55,7 +63,7 @@ A Claude Code plugin that turns Jira bug retesting into a **single command**. Ha
 
 ## Domain Language
 
-ดู [CONTEXT.md](./CONTEXT.md) สำหรับ glossary ของศัพท์เฉพาะ (retest, Bug API/FE, PD3, ADF, wiki markup ฯลฯ)
+ดู [CONTEXT.md](./CONTEXT.md) สำหรับ glossary ของศัพท์เฉพาะ (retest, Bug API/FE, ADF, wiki markup ฯลฯ)
 
 ## Scripts
 

@@ -17,8 +17,8 @@
 
 | Ticket | Status | Step ที่ค้าง | Blocker |
 |--------|--------|-------------|---------|
-| CP-XXXXX | Step 4 (testing) | รอ OTP | ขอ token จาก user |
-| CP-YYYYY | Step 6 (draft ready) | รอ approve | — |
+| PROJ-XXXXX | Step 4 (testing) | รอ OTP | ขอ token จาก user |
+| PROJ-YYYYY | Step 6 (draft ready) | รอ approve | — |
 
 ## Environment State
 
@@ -28,7 +28,7 @@
 
 ## Evidence Collected
 
-### CP-XXXXX
+### PROJ-XXXXX
 - cURL: <collected / not yet>
 - Response: <collected / not yet>
 - Screenshot: <uploaded / not yet>

@@ -20,32 +20,10 @@ _Avoid_: UI bug (ใช้ได้แต่ "Bug FE" เป็น canonical ter
 Jira issue ที่ถูก assign มาให้ retest — มี test steps, expected result, actual result
 _Avoid_: issue (ใช้ "ticket" เสมอใน retest context)
 
-## Environment
-
-**PD3**:
-Pre-production environment สำหรับ CreditPort — ใช้ทดสอบก่อน deploy จริง
-_URL pattern_: `pd3-*.mycreditport.com`
-
-**Admin Portal (BO)**:
-Back-office portal สำหรับ admin — login ด้วย email/password
-_URL_: `<env>-web-portal.mycreditport.com/admin`
-
-**SP Portal**:
-Service Provider portal — login ด้วย OTP flow, token ใช้กับ Gateway เท่านั้น
-_URL_: `<env>-sp.mycreditport.com`
-
-## Authentication
-
-**Admin token**:
-Bearer token จาก Admin Portal login — ใช้เรียก API ตรงๆ ได้ (ไม่ผ่าน Gateway)
-_Gotcha_: ใช้กับ Gateway ไม่ได้
-
-**SP token**:
-Bearer token จาก SP Portal login — ต้องผ่าน Gateway เท่านั้น
-_Gotcha_: ต้อง OTP flow, หมดอายุเร็ว (15-30 นาที)
-
-**Gateway**:
-API Gateway ที่รับเฉพาะ SP token — Admin token ส่งมาจะ 401
+**Project Config**:
+ไฟล์ config เฉพาะโปรเจกต์ที่มี URLs, credentials, environments, architecture — SKILL.md อ่านจากไฟล์นี้
+_Location_: อยู่ใน `references/` หรือ user ระบุ path
+_Template_: `references/project-config-template.md`
 
 ## Jira Integration
 
@@ -60,6 +38,9 @@ _Gotcha_: emoji ต้องเป็นตัวจริง, ticket key จะ
 Jira REST API version — v2 รับ wiki markup, v3 รับ ADF
 _Rule_: Bug FE → v2, Bug API → v3 (ตัดสินใจตั้งแต่ Step 3 ห้ามเปลี่ยน)
 
+**Jira Cloud ID**:
+Domain ของ Jira workspace (เช่น `your-org.atlassian.net`) — ดึงจากลิงก์ ticket หรือ project config
+
 ## Technical
 
 **JXA (JavaScript for Automation)**:
@@ -67,11 +48,11 @@ macOS scripting — ใช้ run JS ใน Chrome tab ผ่าน `osascript -
 _Gotcha_: อ่านไฟล์เป็น Latin-1, Thai chars ต้อง escape เป็น `\uXXXX` ก่อน save
 
 **Swagger spec**:
-OpenAPI spec ของ CreditPort API — ดึงจาก `/api/json-docs`
+OpenAPI spec ของ API — ดึงจาก URL ที่ระบุใน project config
 _Role_: source of truth สำหรับ expected response (ไม่ใช่ ticket)
 
 ## Relationships
 
 - **Ticket** ระบุ **Bug Type** (API หรือ FE) → กำหนด **Comment Format** (v3 ADF หรือ v2 wiki)
-- **Admin token** ใช้กับ **Admin Portal** ตรง, **SP token** ใช้ผ่าน **Gateway**
+- **Project Config** กำหนด URLs, credentials, environments เฉพาะโปรเจกต์
 - **Swagger spec** เป็น source of truth, **ticket** เป็น input เท่านั้น

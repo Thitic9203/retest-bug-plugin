@@ -5,20 +5,20 @@
 - `about:blank` หลัง evaluate หลายรอบ → เช็ค `window.location.href` ก่อนทุก step
 - `SyntaxError: await` → ใช้ `.then()` chain หรือ wrap ด้วย IIFE
 - ใช้ full URL เสมอ (ห้าม relative path)
-- Admin token ใช้กับ Gateway ไม่ได้ — Gateway รับเฉพาะ SP token
-- Login ใหม่ถ้า token หมดอายุ (15-30 นาที)
+- ดู project config สำหรับ token type + ข้อจำกัดเฉพาะโปรเจกต์ (เช่น token ใช้ข้าม portal ไม่ได้)
+- Login ใหม่ถ้า token หมดอายุ (ดู expiry ใน project config)
 
 ## v2 Wiki Markup Gotchas
 
 | ทำผิด | ผลลัพธ์ใน Jira |
 |-------|---------------|
 | ใช้ `\\u274c` (double backslash) ใน template literal | literal text `❌` แทน ❌ |
-| ใส่ ticket key เช่น `CP-12345` ใน text | Jira auto-link เป็น ticket ทั้ง title + status |
+| ใส่ ticket key เช่น `PROJ-123` ใน text | Jira auto-link เป็น ticket ทั้ง title + status |
 | ใช้ v3 endpoint (`/rest/api/3/`) กับ wiki markup body | Error / format ผิด |
 
 **วิธีที่ถูก:**
 - emoji: เขียนตัวจริง `❌` `✅` ใน template literal → escape step จัดการให้
-- ticket key: เลี่ยงใส่ หรือใช้ `{{CP-12345}}` monospace
+- ticket key: เลี่ยงใส่ หรือใช้ `{{PROJ-123}}` monospace
 - endpoint: ใช้ v2 เท่านั้น สำหรับ wiki markup
 
 ## JXA + ภาษาไทย — encoding พัง (สำคัญมาก ผิดซ้ำ = ฟ้อนท์ต่างดาว)
