@@ -475,7 +475,7 @@ fields: { assignee: { accountId: "<dev accountId>" } }
 
 ## Critical Rules
 
-1. **อ่าน guide ก่อนเริ่มเสมอ** — `/Users/thitichaya/Documents/Claude/credit-port-bug-retest-guide.md`
+1. **อ่าน guide ก่อนเริ่มเสมอ** — `references/credit-port-retest-guide.md`
 2. **ห้าม post comment โดยไม่ได้อนุมัติ** — draft ก่อนเสมอ
 3. **cURL + Response เต็มทุก case** — ห้ามย่อ ห้าม "same as above"
 4. **Swagger = source of truth** — ไม่ใช่ ticket (ticket อาจไม่อัปเดต)
