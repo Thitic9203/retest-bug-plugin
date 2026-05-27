@@ -1,18 +1,33 @@
 {
   "name": "retest-bug-dev",
+  "id": "retest-bug-dev",
   "description": "Development marketplace for retest-bug plugin",
   "owner": {
     "name": "Thitichaya"
+  },
+  "metadata": {
+    "description": "QA automation plugin — retest Jira bugs with full evidence, Swagger comparison, and auto-close workflow",
+    "version": "1.0.2"
   },
   "plugins": [
     {
       "name": "retest-bug",
       "description": "Retest bugs from Jira tickets — full workflow with Playwright + Atlassian MCP",
-      "version": "1.0.1",
+      "version": "1.0.2",
       "source": "./",
       "author": {
         "name": "Thitichaya"
-      }
+      },
+      "keywords": [
+        "retest",
+        "bug",
+        "jira",
+        "qa",
+        "playwright",
+        "swagger",
+        "credit-port"
+      ],
+      "category": "qa"
     }
   ]
 }

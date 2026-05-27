@@ -34,3 +34,35 @@ A Claude Code plugin that turns Jira bug retesting into a **single command**. Ha
 
 - **VPN:** Connect to your project's VPN if the test environment requires it
 - **Jira:** Log in to your Atlassian workspace in Chrome (once per session)
+
+## Skills
+
+### Engineering
+
+- **[retest-bug-workflow](./skills/retest-bug-workflow/SKILL.md)** — Full retest flow: read ticket → login → test API/FE → compare Swagger → draft comment → post → transition → assign
+
+## Reference Files
+
+| File | Purpose |
+|------|---------|
+| [gotchas.md](./skills/retest-bug-workflow/references/gotchas.md) | Known pitfalls (encoding, v2 wiki markup, JXA) |
+| [post-mortem-log.md](./skills/retest-bug-workflow/references/post-mortem-log.md) | Lesson learned log |
+| [post-mortem-template.md](./skills/retest-bug-workflow/references/post-mortem-template.md) | Template สำหรับบันทึก post-mortem |
+| [debug-discipline.md](./skills/retest-bug-workflow/references/debug-discipline.md) | Debugging discipline เมื่อ bug ยังอยู่ |
+| [handoff-template.md](./skills/retest-bug-workflow/references/handoff-template.md) | Template สำหรับส่งต่อ session |
+| [new-skill-template.md](./skills/retest-bug-workflow/references/new-skill-template.md) | Template สำหรับสร้าง skill ใหม่ |
+
+## Domain Language
+
+ดู [CONTEXT.md](./CONTEXT.md) สำหรับ glossary ของศัพท์เฉพาะ (retest, Bug API/FE, PD3, ADF, wiki markup ฯลฯ)
+
+## Scripts
+
+```bash
+./scripts/link-skills.sh   # Symlink skills ไป ~/.claude/skills/
+./scripts/list-skills.sh   # List ทุก SKILL.md ใน repo
+```
+
+## Contributing
+
+ดู [CLAUDE.md](./CLAUDE.md) สำหรับ governance rules — skill organization, version management, naming conventions

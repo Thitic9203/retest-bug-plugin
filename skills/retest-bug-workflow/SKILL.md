@@ -446,6 +446,20 @@ fields: { assignee: { accountId: "<dev accountId>" } }
 
 ---
 
+## Skill Composition
+
+เมื่อต้องการความสามารถเพิ่มเติมระหว่าง retest:
+
+| สถานการณ์ | Skill/Reference ที่ใช้ |
+|-----------|----------------------|
+| Bug ยังอยู่ ต้อง investigate | ดู `references/debug-discipline.md` → ถ้าซับซ้อนใช้ `superpowers:systematic-debugging` |
+| ต้อง screenshot UI | ใช้ `superpowers-chrome:browsing` skill |
+| ต้องทดสอบหลาย case ซับซ้อน | ใช้ `superpowers:verification-before-completion` |
+| เจอปัญหาเสียเวลาซ้ำ | บันทึกตาม `references/post-mortem-template.md` |
+| Session จะหมด ต้องส่งต่อ | ใช้ `references/handoff-template.md` |
+
+---
+
 ## Gotchas
 
 > รายละเอียดเต็มอยู่ใน `references/gotchas.md` — อ่านเมื่อเจอปัญหา encoding, v2 wiki markup, หรือ JXA Thai chars
