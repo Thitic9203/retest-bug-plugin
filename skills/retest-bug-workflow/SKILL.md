@@ -23,26 +23,110 @@ Skill สำหรับรีเทสบัคจาก Jira ticket แบบ�
 
 ---
 
-## Step 1 — อ่าน Project Config / Retest Guide
+## Step 1 — โหลด Project Config (Auto-setup ถ้ายังไม่มี)
 
-อ่าน project config ก่อนเริ่มทำงานเสมอ:
+### 1a. หา config ที่มีอยู่
 
-**ลำดับหา config:**
-1. ถาม user ว่ามี retest guide / project config ไหม → ถ้ามีให้ user ระบุ path
-2. ดูใน `references/` ว่ามี guide เฉพาะโปรเจกต์ไหม (เช่น `references/credit-port-retest-guide.md`)
-3. ถ้าไม่มี → ใช้ข้อมูลจาก ticket + Swagger เป็นหลัก + ถาม user เพิ่มเติมตามจำเป็น
+ค้นหาในลำดับนี้:
+1. ดูใน `references/` ว่ามีไฟล์ที่ชื่อไม่ใช่ `project-config-template.md`, `gotchas.md`, `post-mortem*.md`, `debug-*.md`, `handoff-*.md`, `new-skill-*.md` → นั่นคือ project config
+2. ถ้าเจอ → อ่านไฟล์นั้น → ข้ามไป Step 1c
+3. ถ้าไม่เจอ → ทำ Step 1b (interactive setup)
 
-> **Template สำหรับสร้าง config ใหม่:** ดู `references/project-config-template.md`
+### 1b. Interactive Setup (เฉพาะครั้งแรก / ยังไม่มี config)
 
-**กฎเหล็ก:** ปฏิบัติตาม guide/config ทุกข้อ — template, format, กฎเหล็กทุกข้อ ห้ามข้าม ห้ามดัดแปลง
+> ถามทีละข้อ รอคำตอบก่อนถามข้อถัดไป — ห้ามถามรวมหลายข้อพร้อมกัน
 
-**จาก config ต้องจับข้อมูล:**
-- Jira Cloud ID (เช่น `your-org.atlassian.net`)
-- Base URLs ของแต่ละ environment
-- Portal types + login method
-- Credentials (ดูจาก config เท่านั้น ห้ามใส่ใน SKILL.md)
-- Swagger / API docs URL
-- Error documentation URL (ถ้ามี)
+**ถาม Section A — Jira**
+
+> "โปรเจกต์นี้ใช้ Jira ที่ domain อะไรครับ? (เช่น `your-org.atlassian.net`)"
+
+รอคำตอบ → บันทึก `JIRA_CLOUD_ID`
+
+---
+
+> "ticket prefix คืออะไรครับ? (เช่น `CP`, `PROJ`, `WEB`)"
+
+รอคำตอบ → บันทึก `TICKET_PREFIX`
+
+---
+
+**ถาม Section B — Environments**
+
+> "มี environment อะไรบ้างครับ? (เช่น staging, prod, dev, pd3) — ระบุมาทีละอันหรือคั่นด้วย comma"
+
+รอคำตอบ → บันทึก environments list
+
+สำหรับแต่ละ environment ถามต่อ:
+
+> "Base URL ของ `<env>` คืออะไรครับ? (เช่น `https://staging.example.com`)"
+
+รอคำตอบ → บันทึก base URL
+
+> "Swagger / API docs อยู่ที่ path อะไรบน URL นั้นครับ? (เช่น `/api/docs` หรือ `/swagger`) — กด Enter ถ้าไม่มี"
+
+---
+
+**ถาม Section C — Portals & Login**
+
+> "login เข้าระบบด้วยวิธีไหนครับ?
+> 1. Email + Password (ธรรมดา)
+> 2. Email + Password + OTP
+> 3. SSO / OAuth
+> 4. อื่นๆ"
+
+รอคำตอบ → บันทึก login method
+
+> "login URL คืออะไรครับ? (full URL เช่น `https://staging.example.com/admin/login`)"
+
+รอคำตอบ
+
+> "มี portal แยกหลายประเภทไหมครับ? เช่น admin portal กับ user/SP portal แยกกัน (ใช่/ไม่)"
+
+ถ้าใช่ → ถาม portal แต่ละตัวแบบเดียวกัน (URL + login method + token type)
+
+---
+
+**ถาม Section D — Test Credentials**
+
+> "email สำหรับ test login คืออะไรครับ?"
+
+รอคำตอบ
+
+> "password คืออะไรครับ?"
+
+รอคำตอบ
+
+> "token หมดอายุในกี่นาทีครับ? (เช่น 30, 60 — กด Enter ถ้าไม่ทราบ)"
+
+---
+
+**ถาม Section E — Extras (optional)**
+
+> "มี Error Documentation บน Confluence หรือที่อื่นไหมครับ? ถ้ามีช่วยแปะ URL มาได้เลย — กด Enter ถ้าไม่มี"
+
+รอคำตอบ
+
+> "มี gotcha หรือข้อควรระวังเฉพาะโปรเจกต์นี้ที่อยากบอกไว้ไหมครับ? — กด Enter ถ้าไม่มี"
+
+---
+
+**เขียน config ให้อัตโนมัติ:**
+
+หลังได้คำตอบครบ → สร้างไฟล์ `references/<project-name>-retest-guide.md` โดยอิงจาก template ใน `references/project-config-template.md` แล้ว fill in ด้วยคำตอบที่รวบรวมมา → บอก user ว่าสร้างไฟล์ที่ไหน
+
+> "สร้าง project config ที่ `references/<filename>` แล้วครับ — ถ้าต้องการแก้ไขทีหลังสามารถเปิดไฟล์นั้นได้เลย"
+
+### 1c. จับข้อมูลจาก config
+
+จาก config ที่โหลดมา ดึง:
+- `JIRA_CLOUD_ID` — ใช้ใน Step 2, 7, 8
+- Base URLs ของ environments — ใช้ใน Step 4
+- Portal types + login URLs + credentials — ใช้ใน Step 4b
+- Swagger URL — ใช้ใน Step 4e
+- Error Documentation URL (ถ้ามี) — ใช้ใน Step 4e
+- Token notes + gotchas เฉพาะโปรเจกต์ — ใช้ตลอด session
+
+**กฎเหล็ก:** ข้อมูลทั้งหมดมาจาก config เท่านั้น — ห้าม assume หรือ hardcode
 
 ---
 
