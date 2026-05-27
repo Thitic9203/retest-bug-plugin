@@ -8,7 +8,7 @@
     {
       "name": "retest-bug",
       "description": "Retest bugs from Jira tickets — full workflow with Playwright + Atlassian MCP",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "source": "./",
       "author": {
         "name": "Thitichaya"
