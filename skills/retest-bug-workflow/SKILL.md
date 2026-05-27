@@ -28,7 +28,7 @@ Skill สำหรับรีเทสบัคจาก Jira ticket แบบ�
 ### 1a. หา config ที่มีอยู่
 
 ค้นหาในลำดับนี้:
-1. ดูใน `references/` ว่ามีไฟล์ที่ชื่อไม่ใช่ `project-config-template.md`, `gotchas.md`, `post-mortem*.md`, `debug-*.md`, `handoff-*.md`, `new-skill-*.md` → นั่นคือ project config
+1. ดูใน `references/` ว่ามีไฟล์ที่ชื่อ match pattern `*-retest-guide.md` → นั่นคือ project config
 2. ถ้าเจอ → อ่านไฟล์นั้น → ข้ามไป Step 1c
 3. ถ้าไม่เจอ → ทำ Step 1b (interactive setup)
 
@@ -38,13 +38,19 @@ Skill สำหรับรีเทสบัคจาก Jira ticket แบบ�
 
 **ถาม Section A — Jira**
 
+> ถ้า Step 0 ได้ `JIRA_CLOUD_ID` จาก ticket URL แล้ว → **ข้าม 2 ข้อนี้ทั้งคู่** ไปที่ Section B ได้เลย
+
+ถ้ายังไม่รู้:
+
 > "โปรเจกต์นี้ใช้ Jira ที่ domain อะไรครับ? (เช่น `your-org.atlassian.net`)"
 
 รอคำตอบ → บันทึก `JIRA_CLOUD_ID`
 
 ---
 
-> "ticket prefix คืออะไรครับ? (เช่น `CP`, `PROJ`, `WEB`)"
+> "ticket prefix คืออะไรครับ? (เช่น `CP`, `PROJ`, `WEB`) — ถ้า ticket key คือ `PROJ-123` ก็ตอบ `PROJ`"
+
+> ถ้า Step 0 ได้ ticket key แล้ว (เช่น `PROJ-123`) → **ข้ามข้อนี้** ดึง prefix จาก key ได้เลย
 
 รอคำตอบ → บันทึก `TICKET_PREFIX`
 
@@ -506,18 +512,17 @@ fs.writeFileSync('/tmp/jira-v2-comment.js', js, 'ascii');
 
 ### 8a. Transition ตามผลเทส
 
-| ผลเทส | Transition target |
-|-------|------------------|
+| ผลเทส | Transition target (ค่า default) |
+|-------|--------------------------------|
 | PASSED | Ready to Demo |
 | FAILED | In Progress |
 
-ดึง transition ID ก่อน:
+> **⚠️ ชื่อ transition ขึ้นกับแต่ละโปรเจกต์** — ดูจาก project config ก่อน ถ้าไม่มีระบุ ใช้ค่า default แล้วเรียก `getTransitionsForJiraIssue` เพื่อยืนยันชื่อที่ถูกต้อง
+
 ```
-Tool: getTransitionsForJiraIssue → หา transition ตามตารางด้านบน
+Tool: getTransitionsForJiraIssue → ดู transitions ที่มีทั้งหมด → เลือกตามตารางด้านบน (หรือตาม config)
 Tool: transitionJiraIssue → ใช้ transition ID ที่ได้
 ```
-
-> **Note:** ชื่อ transition อาจต่างกันในแต่ละโปรเจกต์ — ดูจาก project config หรือ getTransitionsForJiraIssue
 
 ### 8b. หา dev ที่ทำเรื่องนี้ (คนที่ move → In Progress ล่าสุด)
 

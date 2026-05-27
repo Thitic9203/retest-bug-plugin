@@ -1,7 +1,7 @@
 # Project Retest Config — Template
 
-> Copy ไฟล์นี้ไปไว้ใน project ของคุณแล้ว fill in ข้อมูลเฉพาะโปรเจกต์
-> SKILL.md จะอ่านไฟล์นี้ใน Step 1 เพื่อดึง URLs, credentials, environments
+> ตั้งชื่อไฟล์ว่า `<project-name>-retest-guide.md` แล้ววางไว้ใน `references/` ของ skill
+> SKILL.md จะ detect ไฟล์ที่ match pattern `*-retest-guide.md` ใน Step 1 อัตโนมัติ
 
 ---
 
