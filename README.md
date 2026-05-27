@@ -45,6 +45,7 @@ A Claude Code plugin that turns Jira bug retesting into a **single command**. Ha
 
 | File | Purpose |
 |------|---------|
+| [credit-port-retest-guide.md](./skills/retest-bug-workflow/references/credit-port-retest-guide.md) | Full retest guide — workflow, templates, credentials, gotchas |
 | [gotchas.md](./skills/retest-bug-workflow/references/gotchas.md) | Known pitfalls (encoding, v2 wiki markup, JXA) |
 | [post-mortem-log.md](./skills/retest-bug-workflow/references/post-mortem-log.md) | Lesson learned log |
 | [post-mortem-template.md](./skills/retest-bug-workflow/references/post-mortem-template.md) | Template สำหรับบันทึก post-mortem |

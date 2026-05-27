@@ -1,6 +1,6 @@
 {
   "name": "retest-bug",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Retest bugs from Jira tickets — login, test API/FE, compare Swagger, draft & post Jira comment, transition ticket",
   "author": {
     "name": "Thitichaya"

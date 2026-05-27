@@ -26,10 +26,10 @@ Skill สำหรับรีเทสบัคจาก Jira ticket แบบ�
 อ่าน guide ก่อนเริ่มทำงานเสมอ:
 
 ```
-Read file: /Users/thitichaya/Documents/Claude/credit-port-bug-retest-guide.md
+Read file: references/credit-port-retest-guide.md (relative to this SKILL.md)
 ```
 
-> **Prerequisite:** ไฟล์ guide ต้องอยู่ที่ path ด้านบน — ถ้าใช้เครื่องอื่นให้ปรับ path ให้ตรง
+> **Note:** guide อยู่ใน repo ที่ `references/credit-port-retest-guide.md` — ใช้ได้ทุกเครื่องที่ clone repo มา
 
 **กฎเหล็ก:** ปฏิบัติตาม guide ทุกข้อ — template, format, กฎเหล็กทุกข้อ ห้ามข้าม ห้ามดัดแปลง
 
