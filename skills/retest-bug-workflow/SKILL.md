@@ -1,6 +1,6 @@
 ---
 name: retest-bug-workflow
-description: Use when retesting a bug from a Jira ticket — orchestrates login, API/FE testing, Swagger comparison, Jira comment drafting, and ticket transition. Triggered by /retest-bug command.
+description: This skill should be used when retesting a bug from a Jira ticket, verifying a bug fix, or checking whether an issue is resolved on CreditPort environments. Handles the full retest flow — reading the ticket, logging into the portal, running API or FE tests, comparing responses against Swagger spec, drafting a Jira comment with full evidence, posting the comment, transitioning the ticket, and assigning it back to the dev. Common triggers — "retest this bug", "verify the fix on CP-12345", "check if CP-12345 is fixed", "retest bug CP-12345".
 ---
 
 # Retest Bug Workflow
@@ -29,6 +29,8 @@ Skill สำหรับรีเทสบัคจาก Jira ticket แบบ�
 Read file: /Users/thitichaya/Documents/Claude/credit-port-bug-retest-guide.md
 ```
 
+> **Prerequisite:** ไฟล์ guide ต้องอยู่ที่ path ด้านบน — ถ้าใช้เครื่องอื่นให้ปรับ path ให้ตรง
+
 **กฎเหล็ก:** ปฏิบัติตาม guide ทุกข้อ — template, format, กฎเหล็กทุกข้อ ห้ามข้าม ห้ามดัดแปลง
 
 ---
@@ -38,11 +40,12 @@ Read file: /Users/thitichaya/Documents/Claude/credit-port-bug-retest-guide.md
 ใช้ Atlassian MCP ดึงรายละเอียด ticket:
 
 ```
-Tool: mcp__208b743d-c680-4a36-b054-1030bcf5548d__getJiraIssue
+Tool: Atlassian MCP → getJiraIssue
 cloudId: humanintelligence.atlassian.net
 issueIdOrKey: <TICKET_KEY>
 responseContentFormat: markdown
 ```
+> MCP tool ID อาจต่างกันในแต่ละ session — ใช้ ToolSearch หา "getJiraIssue" เพื่อหา tool ID จริง
 
 **จับข้อมูลจาก ticket:**
 - Environment (PD3 / dev)
@@ -110,10 +113,11 @@ Skill tool: <skill-name>
 **Admin (BO):**
 ```
 playwright_navigate → <env>-web-portal.mycreditport.com/admin
-playwright_fill → email: admin@mhesi.com
-playwright_fill → password: admin123
+playwright_fill → email: <ดู credentials ใน retest guide>
+playwright_fill → password: <ดู credentials ใน retest guide>
 playwright_click → submit button
 ```
+> Credentials อยู่ใน retest guide section "Environment" — ห้ามใส่ password ตรงๆ ใน skill file
 
 **SP:** ต้อง login ผ่าน UI + OTP flow (ดูรายละเอียดใน guide section "SP token")
 
@@ -285,12 +289,13 @@ console.log('Thai sample:', decoded.match(/[฀-๿]+/)?.[0]);
 
 ### 7a. ลอง Atlassian MCP ก่อน
 ```
-Tool: mcp__208b743d-c680-4a36-b054-1030bcf5548d__addCommentToJiraIssue
+Tool: Atlassian MCP → addCommentToJiraIssue
 cloudId: humanintelligence.atlassian.net
 issueIdOrKey: <TICKET_KEY>
 contentFormat: markdown
 commentBody: <approved comment>
 ```
+> ใช้ ToolSearch หา "addCommentToJiraIssue" เพื่อหา tool ID จริง
 
 ### 7b. Fallback — JXA + Chrome (ถ้า MCP 403)
 
@@ -443,43 +448,14 @@ fields: { assignee: { accountId: "<dev accountId>" } }
 
 ## Gotchas
 
-- `about:blank` หลัง evaluate หลายรอบ → เช็ค `window.location.href` ก่อนทุก step
-- `SyntaxError: await` → ใช้ `.then()` chain หรือ wrap ด้วย IIFE
+> รายละเอียดเต็มอยู่ใน `references/gotchas.md` — อ่านเมื่อเจอปัญหา encoding, v2 wiki markup, หรือ JXA Thai chars
+
+**สรุปสั้น:**
+- `about:blank` หลัง evaluate → เช็ค `window.location.href` ก่อนทุก step
 - ใช้ full URL เสมอ (ห้าม relative path)
-- Admin token ใช้กับ Gateway ไม่ได้ — Gateway รับเฉพาะ SP token
-- Login ใหม่ถ้า token หมดอายุ (15-30 นาที)
-
-### ⚠️ v2 Wiki Markup Gotchas
-
-| ทำผิด | ผลลัพธ์ใน Jira |
-|-------|---------------|
-| ใช้ `\\u274c` (double backslash) ใน template literal | literal text `❌` แทน ❌ |
-| ใส่ ticket key เช่น `CP-12345` ใน text | Jira auto-link เป็น ticket ทั้ง title + status |
-| ใช้ v3 endpoint (`/rest/api/3/`) กับ wiki markup body | Error / format ผิด |
-
-**วิธีที่ถูก:**
-- emoji: เขียนตัวจริง `❌` `✅` ใน template literal → escape step จัดการให้
-- ticket key: เลี่ยงใส่ หรือใช้ `{{CP-12345}}` monospace
-- endpoint: ใช้ v2 เท่านั้น สำหรับ wiki markup
-
-### ⚠️ JXA + ภาษาไทย — encoding พัง (สำคัญมาก ผิดซ้ำ = ฟ้อนท์ต่างดาว)
-
-**สาเหตุ:** JXA `app.read(file)` อ่านไฟล์เป็น Latin-1 — ถ้า JS file มี Thai chars จะพัง 2 แบบ:
-| ทำผิด | ผลลัพธ์ใน Jira |
-|-------|---------------|
-| ใส่ Thai chars ตรงๆ ใน JS file | อักขระแปลก `±πÅ±πÄ` |
-| escape ด้วย `\uXXXX` **ก่อน** `JSON.stringify` | literal text `ตาม` |
-
-**วิธีที่ถูกต้องเท่านั้น (ห้ามเปลี่ยน):**
-1. สร้าง ADF body ด้วย **Thai text จริงๆ**
-2. `JSON.stringify({body})` **ก่อน** — ได้ JSON string ที่มี Thai chars
-3. `.replace(/[^\x00-\x7F]/g, ...)` **หลัง** — แปลง Thai เป็น `\uXXXX` ใน JS string literal
-4. `fs.writeFileSync(path, js, 'ascii')` — ไฟล์ต้องเป็น ASCII ล้วน
-5. ตรวจสอบ: `if (/[^\x00-\x7F]/.test(js)) throw 'STILL HAS NON-ASCII'`
-
-**ทำไมถึงถูก:** Chrome decode `\uXXXX` ใน JS string literal กลับเป็น Thai chars จริงก่อนส่ง fetch → Jira รับ Thai text ถูกต้อง
-
-**ดู Step 7b สำหรับ code ตัวอย่างเต็ม**
+- Admin token ใช้กับ Gateway ไม่ได้ — ต้องใช้ SP token
+- v2 wiki markup: emoji ใช้ตัวจริง, ticket key ครอบด้วย `{{...}}`, endpoint ต้องเป็น v2
+- JXA Thai: `JSON.stringify` ก่อน → escape non-ASCII หลัง → save เป็น ASCII
 
 ---
 
@@ -501,20 +477,6 @@ fields: { assignee: { accountId: "<dev accountId>" } }
 
 ## Post-Mortem Log
 
-> บันทึก lesson learned จาก session ที่เจอปัญหา — ป้องกันไม่ให้ซ้ำ
-
-### PM-1: CP-11507 Comment Format พังซ้ำ 4 รอบ (2026-05-26)
-
-**ปัญหา:** โพสต์ comment 4 ครั้ง แต่ละครั้งพังคนละจุด (Thai encoding, emoji literal, auto-link) เสียเวลา ~2 ชม.
-
-**Root cause:**
-1. ไม่ได้จำแนก Bug FE ตั้งแต่ Step 3 → เริ่มด้วย v3 ADF → ต้องเปลี่ยนมา v2 wiki markup กลางทางเมื่อ inline image ทำไม่ได้ใน ADF
-2. v2 wiki markup มี gotcha ชุดใหม่ (emoji escape, auto-link) ที่ไม่เคยเจอใน v3
-3. ไม่มี dry-run → โพสต์แล้วค่อยเห็นปัญหา → delete + re-post วนซ้ำ
-
-**Fixes applied:**
-- Step 3a: เพิ่ม Bug Type classification → กำหนด comment format (v2/v3) ทันที
-- Step 7: เพิ่ม pre-post checklist + dry-run verification script
-- Gotchas: เพิ่มตาราง v2 wiki markup gotchas + วิธีแก้
-
-**Lesson:** ตัดสินใจ format ตั้งแต่ต้น + validate ก่อนส่ง = ไม่ต้อง re-post
+> รายละเอียดเต็มอยู่ใน `references/post-mortem-log.md`
+>
+> **สรุป PM-1 (CP-11507):** ตัดสินใจ v2/v3 ตั้งแต่ต้น + dry-run ก่อนส่ง = ไม่ต้อง re-post
