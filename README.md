@@ -32,9 +32,11 @@ A Claude Code plugin that turns Jira bug retesting into a **single command**. Ha
 
 ## First-Time Setup
 
+ไม่ต้องเซตอัปล่วงหน้า — แค่รัน `/retest-bug` ครั้งแรก skill จะถามข้อมูลทีละข้อแล้วสร้าง config ให้อัตโนมัติ
+
+หรือถ้าอยากเตรียมไว้ก่อน:
 1. Copy `references/project-config-template.md` to `references/<your-project>-retest-guide.md`
 2. Fill in your project's URLs, environments, credentials, architecture
-3. When you run `/retest-bug`, point the skill to your config file
 
 ## Prerequisites
 
@@ -53,7 +55,6 @@ A Claude Code plugin that turns Jira bug retesting into a **single command**. Ha
 | File | Purpose |
 |------|---------|
 | [project-config-template.md](./skills/retest-bug-workflow/references/project-config-template.md) | Template สำหรับสร้าง project config ใหม่ |
-| [credit-port-retest-guide.md](./skills/retest-bug-workflow/references/credit-port-retest-guide.md) | ตัวอย่าง project config — CreditPort MHESI |
 | [gotchas.md](./skills/retest-bug-workflow/references/gotchas.md) | Known pitfalls (encoding, v2 wiki markup, JXA) |
 | [post-mortem-log.md](./skills/retest-bug-workflow/references/post-mortem-log.md) | Lesson learned log |
 | [post-mortem-template.md](./skills/retest-bug-workflow/references/post-mortem-template.md) | Template สำหรับบันทึก post-mortem |

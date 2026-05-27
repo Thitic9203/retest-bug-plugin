@@ -7,13 +7,13 @@
   },
   "metadata": {
     "description": "QA automation plugin — retest Jira bugs with full evidence, Swagger comparison, and auto-close workflow",
-    "version": "1.0.7"
+    "version": "1.0.8"
   },
   "plugins": [
     {
       "name": "retest-bug",
       "description": "Retest bugs from Jira tickets — full workflow with Playwright + Atlassian MCP",
-      "version": "1.0.7",
+      "version": "1.0.8",
       "source": "./",
       "author": {
         "name": "Thitichaya"
@@ -24,8 +24,7 @@
         "jira",
         "qa",
         "playwright",
-        "swagger",
-        "credit-port"
+        "swagger"
       ],
       "category": "qa"
     }
