@@ -17,48 +17,40 @@ A Claude Code plugin that turns Jira bug retesting into a **single command**. Ha
 - **Auto-close workflow** — transitions the ticket (PASSED → Ready to Demo / FAILED → In Progress) and assigns it back to the dev
 - **Zero memorization** — reads the retest guide, picks the right test strategy, collects all evidence automatically
 
-## Install
+## Quick Start
+
+### 1. Install (ครั้งเดียว)
+
+เปิด Terminal แล้วรัน:
 
 ```bash
 curl -sL https://raw.githubusercontent.com/Thitic9203/retest-bug-plugin/main/scripts/install.sh | bash
 ```
 
-หรือ clone เอง:
-```bash
-git clone https://github.com/Thitic9203/retest-bug-plugin ~/.claude/plugins/src/retest-bug
-cd ~/.claude/plugins/src/retest-bug && ./scripts/setup.sh
-```
+### 2. ใช้งาน
 
-หลังจากนี้ `git pull` = ได้ plugin ล่าสุดทันที ไม่ต้องทำอะไรเพิ่ม
-
-## Usage
+เปิด Claude Code แล้วพิมพ์:
 
 ```
 /retest-bug PROJ-123
-/retest-bug https://your-org.atlassian.net/browse/PROJ-123
 ```
 
-## First-Time Setup
+ครั้งแรก skill จะถามข้อมูลโปรเจกต์ทีละข้อแล้วสร้าง config ให้อัตโนมัติ
 
-ไม่ต้องเซตอัปล่วงหน้า — แค่รัน `/retest-bug` ครั้งแรก skill จะถามข้อมูลทีละข้อแล้วสร้าง config ให้อัตโนมัติ
+### 3. อัปเดต (เมื่อมีเวอร์ชันใหม่)
 
-หรือถ้าอยากเตรียมไว้ก่อน:
-1. Copy `references/project-config-template.md` to `references/<your-project>-retest-guide.md`
-2. Fill in your project's URLs, environments, credentials, architecture
-
-## Update
+เปิด Terminal แล้วรัน:
 
 ```bash
 cd ~/.claude/plugins/src/retest-bug && git pull
 ```
 
-แค่นี้ — cache เป็น symlink ชี้มาที่ repo อยู่แล้ว ไม่ต้อง reinstall
+แค่นี้ ไม่ต้อง reinstall ไม่ต้องรันคำสั่งอื่นเพิ่ม
 
 ## Prerequisites
 
-- **VPN:** Connect to your project's VPN if the test environment requires it
-- **Jira:** Log in to your Atlassian workspace in Chrome (once per session)
-- **Project config:** A filled-in project config file (see First-Time Setup)
+- **VPN:** เชื่อมต่อ VPN ของโปรเจกต์ก่อน (ถ้า test environment ต้องใช้)
+- **Jira:** login เข้า Atlassian workspace ใน Chrome ไว้ (ครั้งเดียวต่อ session)
 
 ## Skills
 
