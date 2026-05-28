@@ -11,6 +11,29 @@ Skill สำหรับรีเทสบัคจาก Jira ticket แบบ�
 
 **Project-agnostic:** ใช้ได้ทุกโปรเจกต์ — อ่าน project config จาก guide file ใน Step 1
 
+## AskUserQuestion Rules (MANDATORY — read before any question)
+
+**ALL AskUserQuestion fields MUST be in English only** — Thai characters render as garbled/unreadable text in the AskUserQuestion UI widget (vowel marks displaced, alien-looking characters).
+
+| Field | Rule | Example |
+|-------|------|---------|
+| `question` | English only | `"Which test approach?"` |
+| `header` | English only, max 12 chars | `"Approach"` |
+| `label` | English only, short | `"VPN + Chrome"` |
+| `description` | English only | `"Use browser already connected to VPN"` |
+
+**Section A–E setup questions** → ask as plain text in Claude's response (Thai OK there), NOT via AskUserQuestion. AskUserQuestion is for multiple-choice approvals only.
+
+**When to use AskUserQuestion:**
+- Step 3: choosing test approach (multiple options)
+- Step 6: approving draft comment (yes/no)
+- Any binary or multi-choice decision during the flow
+
+**When NOT to use AskUserQuestion:**
+- Open-ended text input (URLs, credentials, env names) → plain text conversation
+
+---
+
 ## Step 0 — รับ Ticket
 
 ถ้า user ยังไม่ได้ระบุ ticket:
@@ -587,6 +610,7 @@ fields: { assignee: { accountId: "<dev accountId>" } }
 9. **ห้ามบอกว่าทดสอบไม่ได้เพราะไม่มีข้อมูล** — ต้องหาทางสร้าง/จัดเตรียม test data มาให้ได้เสมอ (ดู Step 4c)
 10. **ตัดสินใจ v2/v3 ตั้งแต่ Step 3** — Bug FE → v2 wiki markup, Bug API → v3 ADF (ห้ามเปลี่ยนกลางทาง)
 11. **Dry-run ก่อนโพสต์ทุกครั้ง** — decode \uXXXX กลับมาตรวจ emoji + Thai + ticket key ก่อนส่งจริง (ดู Step 7 Pre-post checklist)
+12. **AskUserQuestion = English only** — ทุก field (question, header, label, description) ต้องเป็น English ทั้งหมด ห้ามใช้ภาษาไทยเพราะ render เป็นฟ้อนท์ต่างดาว (ดู "AskUserQuestion Rules" ด้านบน)
 
 ---
 
