@@ -19,9 +19,17 @@ A Claude Code plugin that turns Jira bug retesting into a **single command**. Ha
 
 ## Install
 
+```bash
+curl -sL https://raw.githubusercontent.com/Thitic9203/retest-bug-plugin/main/scripts/install.sh | bash
 ```
-/install-plugin https://github.com/Thitic9203/retest-bug-plugin
+
+หรือ clone เอง:
+```bash
+git clone https://github.com/Thitic9203/retest-bug-plugin ~/.claude/plugins/src/retest-bug
+cd ~/.claude/plugins/src/retest-bug && ./scripts/setup.sh
 ```
+
+หลังจากนี้ `git pull` = ได้ plugin ล่าสุดทันที ไม่ต้องทำอะไรเพิ่ม
 
 ## Usage
 
@@ -38,13 +46,13 @@ A Claude Code plugin that turns Jira bug retesting into a **single command**. Ha
 1. Copy `references/project-config-template.md` to `references/<your-project>-retest-guide.md`
 2. Fill in your project's URLs, environments, credentials, architecture
 
-## Auto-Update (หลัง clone ครั้งแรก)
+## Update
 
 ```bash
-./scripts/setup.sh
+cd ~/.claude/plugins/src/retest-bug && git pull
 ```
 
-รันครั้งเดียว — หลังจากนั้นทุกครั้งที่ `git pull` plugin cache จะ sync ให้อัตโนมัติ ไม่ต้อง reinstall ใน Claude Code
+แค่นี้ — cache เป็น symlink ชี้มาที่ repo อยู่แล้ว ไม่ต้อง reinstall
 
 ## Prerequisites
 
@@ -77,7 +85,8 @@ A Claude Code plugin that turns Jira bug retesting into a **single command**. Ha
 ## Scripts
 
 ```bash
-./scripts/setup.sh         # รันครั้งเดียวหลัง clone — ติดตั้ง hook ให้ git pull sync cache อัตโนมัติ
+./scripts/install.sh       # One-command install (clone + symlink + hooks)
+./scripts/setup.sh         # Post-clone setup (symlink cache + enable auto-update)
 ./scripts/link-skills.sh   # Symlink skills ไป ~/.claude/skills/
 ./scripts/list-skills.sh   # List ทุก SKILL.md ใน repo
 ```
