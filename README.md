@@ -38,6 +38,14 @@ A Claude Code plugin that turns Jira bug retesting into a **single command**. Ha
 1. Copy `references/project-config-template.md` to `references/<your-project>-retest-guide.md`
 2. Fill in your project's URLs, environments, credentials, architecture
 
+## Auto-Update (หลัง clone ครั้งแรก)
+
+```bash
+./scripts/setup.sh
+```
+
+รันครั้งเดียว — หลังจากนั้นทุกครั้งที่ `git pull` plugin cache จะ sync ให้อัตโนมัติ ไม่ต้อง reinstall ใน Claude Code
+
 ## Prerequisites
 
 - **VPN:** Connect to your project's VPN if the test environment requires it
@@ -69,6 +77,7 @@ A Claude Code plugin that turns Jira bug retesting into a **single command**. Ha
 ## Scripts
 
 ```bash
+./scripts/setup.sh         # รันครั้งเดียวหลัง clone — ติดตั้ง hook ให้ git pull sync cache อัตโนมัติ
 ./scripts/link-skills.sh   # Symlink skills ไป ~/.claude/skills/
 ./scripts/list-skills.sh   # List ทุก SKILL.md ใน repo
 ```

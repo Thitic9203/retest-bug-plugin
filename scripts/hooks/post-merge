@@ -1,0 +1,39 @@
+#!/bin/bash
+# Post-merge hook: sync plugin cache after git pull
+# ทำงานอัตโนมัติหลัง git pull — ไม่ต้อง reinstall plugin ใน Claude Code
+
+PLUGIN_JSON=".claude-plugin/plugin.json"
+MARKETPLACE_NAME="retest-bug-dev"
+PLUGIN_NAME="retest-bug"
+CACHE_BASE="$HOME/.claude/plugins/cache/$MARKETPLACE_NAME/$PLUGIN_NAME"
+
+# Exit silently if cache doesn't exist (plugin not installed via Claude Code yet)
+[ -d "$CACHE_BASE" ] || exit 0
+
+# Read current version from plugin.json
+VERSION=$(grep '"version"' "$PLUGIN_JSON" | head -1 | sed 's/.*"\([0-9]*\.[0-9]*\.[0-9]*\)".*/\1/')
+[ -z "$VERSION" ] && exit 0
+
+# Rename old version dir → new version (if version changed)
+for OLD_DIR in "$CACHE_BASE"/*/; do
+  [ -d "$OLD_DIR" ] || continue
+  OLD_VER=$(basename "$OLD_DIR")
+  if [ "$OLD_VER" != "$VERSION" ]; then
+    mv "$OLD_DIR" "$CACHE_BASE/$VERSION"
+    echo "Cache renamed: $OLD_VER → $VERSION"
+    break
+  fi
+done
+
+# Sync repo files → cache dir
+TARGET="$CACHE_BASE/$VERSION"
+if [ -d "$TARGET" ]; then
+  if command -v rsync &>/dev/null; then
+    rsync -a --delete --exclude='.git' . "$TARGET/"
+  else
+    # Fallback for machines without rsync
+    find "$TARGET" -mindepth 1 -maxdepth 1 -not -name '.git' -exec rm -rf {} +
+    find . -maxdepth 1 -not -name '.git' -not -name '.' -exec cp -R {} "$TARGET/" \;
+  fi
+  echo "Plugin cache synced → $TARGET"
+fi
